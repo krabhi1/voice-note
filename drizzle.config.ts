@@ -1,13 +1,23 @@
 import { defineConfig } from 'drizzle-kit';
 
-if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+import { z } from 'zod';
+
+const envSchema = z.object({
+	CLOUDFLARE_ACCOUNT_ID: z.string(),
+	CLOUDFLARE_DATABASE_ID: z.string(),
+	CLOUDFLARE_D1_TOKEN: z.string()
+});
+
+const env = envSchema.parse(process.env);
 
 export default defineConfig({
 	schema: './src/lib/server/db/schema.ts',
-	dialect: 'turso',
+	dialect: 'sqlite',
+	driver: 'd1-http',
 	dbCredentials: {
-		authToken: process.env.DATABASE_AUTH_TOKEN,
-		url: process.env.DATABASE_URL
+		accountId: env.CLOUDFLARE_ACCOUNT_ID,
+		databaseId: env.CLOUDFLARE_DATABASE_ID,
+		token: env.CLOUDFLARE_D1_TOKEN
 	},
 	verbose: true,
 	strict: true

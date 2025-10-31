@@ -2,10 +2,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = async ({ request, platform }) => {
+export const POST: RequestHandler = async ({ request, platform,locals }) => {
 	// TypeScript now knows 'platform.env' contains DB and ASSETS_BUCKET
 	const db = platform?.env.DB;
 	const bucket = platform?.env.BUCKET;
+	const dbActions = locals.db;
 
 	if (!db || !bucket) {
 		return json({ message: 'Bindings are missing' }, { status: 500 });
@@ -17,6 +18,12 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	//get all tables from the database
 	const tables = await db.exec("SELECT name FROM sqlite_master WHERE type='table';");
 	console.log('Tables in the database:', tables);
+	//create user
+	const newUser = await dbActions.addUser(Math.floor(Math.random() * 100));
+	console.log('New user added:', newUser);
+  //get all users
+  const users = await dbActions.getUsers();
+  console.log('All users:', users);
 
-	return json({ files: files.objects });
+	return json({ files: files.objects,users });
 };

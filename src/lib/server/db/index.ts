@@ -1,15 +1,23 @@
-import { dev } from '$app/environment';
-import { drizzle } from 'drizzle-orm/libsql';
-import { createClient } from '@libsql/client';
+// src/lib/db/index.ts
+
+import { drizzle } from 'drizzle-orm/d1';
 import * as schema from './schema';
-import { env } from '$env/dynamic/private';
+import type { D1Database } from '@cloudflare/workers-types';
 
-if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
-if (!dev && !env.DATABASE_AUTH_TOKEN) throw new Error('DATABASE_AUTH_TOKEN is not set');
+export function getDrizzleClient(d1: D1Database) {
+	return drizzle(d1, { schema });
+}
 
-const client = createClient({
-	url: env.DATABASE_URL,
-	authToken: env.DATABASE_AUTH_TOKEN
-});
+export function createDbActions(d1: D1Database) {
+	const db = getDrizzleClient(d1);
+	return {
+		getUsers: async () => {
+			return await db.query.user.findMany();
+		},
+		addUser: async (age: number) => {
+			return await db.insert(schema.user).values({ age }).returning();
+		}
+	};
+}
 
-export const db = drizzle(client, { schema });
+export * from './schema';
