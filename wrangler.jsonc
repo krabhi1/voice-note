@@ -1,0 +1,23 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "voice-note",
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"compatibility_date": "2025-01-01",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"r2_buckets": [
+		{
+			"binding": "BUCKET",
+			"bucket_name": "voice-note"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "voice-note",
+			"database_id": "1a3a1f70-f0e5-415f-b4a6-fd08e7d1040b"
+		}
+	]
+}

@@ -20,6 +20,7 @@
 		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20251014.0",
 		"@libsql/client": "^0.15.15",
 		"@sveltejs/adapter-cloudflare": "^7.2.3",
 		"@sveltejs/kit": "^2.43.2",
@@ -40,6 +41,7 @@
 		"vite": "^7.1.7",
 		"vite-plugin-devtools-json": "^1.0.0",
 		"vitest": "^3.2.4",
-		"vitest-browser-svelte": "^1.1.0"
+		"vitest-browser-svelte": "^1.1.0",
+		"wrangler": "^4.45.2"
 	}
 }

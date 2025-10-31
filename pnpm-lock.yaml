@@ -8,12 +8,15 @@ importers:
 
   .:
     devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20251014.0
+        version: 4.20251014.0
       '@libsql/client':
         specifier: ^0.15.15
         version: 0.15.15
       '@sveltejs/adapter-cloudflare':
         specifier: ^7.2.3
-        version: 7.2.4(@sveltejs/kit@2.47.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(wrangler@4.44.0(@cloudflare/workers-types@4.20251014.0))
+        version: 7.2.4(@sveltejs/kit@2.47.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(wrangler@4.45.2(@cloudflare/workers-types@4.20251014.0))
       '@sveltejs/kit':
         specifier: ^2.43.2
         version: 2.47.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2))
@@ -71,6 +74,9 @@ importers:
       vitest-browser-svelte:
         specifier: ^1.1.0
         version: 1.1.0(@vitest/browser@3.2.4)(svelte@5.41.1)(vitest@3.2.4)
+      wrangler:
+        specifier: ^4.45.2
+        version: 4.45.2(@cloudflare/workers-types@4.20251014.0)
 
 packages:
 
@@ -1537,8 +1543,8 @@ packages:
     engines: {node: '>=10.0.0'}
     hasBin: true
 
-  miniflare@4.20251011.0:
-    resolution: {integrity: sha512-DlZ7vR5q/RE9eLsxsrXzfSZIF2f6O5k0YsFrSKhWUtdefyGtJt4sSpR6V+Af/waaZ6+zIFy9lsknHBCm49sEYA==}
+  miniflare@4.20251011.1:
+    resolution: {integrity: sha512-Qbw1Z8HTYM1adWl6FAtzhrj34/6dPRDPwdYOx21dkae8a/EaxbMzRIPbb4HKVGMVvtqbK1FaRCgDLVLolNzGHg==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -1935,8 +1941,8 @@ packages:
     resolution: {integrity: sha512-+TvsA6VAVoMC3XDKR5MoC/qlLqDixEfOBysDEKnPIPou/NvoPWCAuXHXMsswwlvmEuvX56lQjvELLyLuzTKvRw==}
     engines: {node: '>=12'}
 
-  wrangler@4.44.0:
-    resolution: {integrity: sha512-BLOUigckcWZ0r4rm7b5PuaTpb9KP9as0XeCRSJ8kqcNgXcKoUD3Ij8FlPvN25KybLnFnetaO0ZdfRYUPWle4qw==}
+  wrangler@4.45.2:
+    resolution: {integrity: sha512-+G24gD+Rh7iBus5QiVBhNgSLzyAiyuZSm+3Ih5li8+PEA+gosAXfDSZlNZwsVmXd8VJTjq+BR4vhUiruQRWgTw==}
     engines: {node: '>=18.0.0'}
     hasBin: true
     peerDependencies:
@@ -2513,12 +2519,12 @@ snapshots:
     dependencies:
       acorn: 8.15.0
 
-  '@sveltejs/adapter-cloudflare@7.2.4(@sveltejs/kit@2.47.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(wrangler@4.44.0(@cloudflare/workers-types@4.20251014.0))':
+  '@sveltejs/adapter-cloudflare@7.2.4(@sveltejs/kit@2.47.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(wrangler@4.45.2(@cloudflare/workers-types@4.20251014.0))':
     dependencies:
       '@cloudflare/workers-types': 4.20251014.0
       '@sveltejs/kit': 2.47.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2))
       worktop: 0.8.0-next.18
-      wrangler: 4.44.0(@cloudflare/workers-types@4.20251014.0)
+      wrangler: 4.45.2(@cloudflare/workers-types@4.20251014.0)
 
   '@sveltejs/kit@2.47.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@7.1.11(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2))':
     dependencies:
@@ -3056,7 +3062,7 @@ snapshots:
 
   mime@3.0.0: {}
 
-  miniflare@4.20251011.0:
+  miniflare@4.20251011.1:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       acorn: 8.14.0
@@ -3423,13 +3429,13 @@ snapshots:
       mrmime: 2.0.1
       regexparam: 3.0.0
 
-  wrangler@4.44.0(@cloudflare/workers-types@4.20251014.0):
+  wrangler@4.45.2(@cloudflare/workers-types@4.20251014.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
       '@cloudflare/unenv-preset': 2.7.8(unenv@2.0.0-rc.21)(workerd@1.20251011.0)
       blake3-wasm: 2.1.5
       esbuild: 0.25.4
-      miniflare: 4.20251011.0
+      miniflare: 4.20251011.1
       path-to-regexp: 6.3.0
       unenv: 2.0.0-rc.21
       workerd: 1.20251011.0
