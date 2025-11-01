@@ -1,25 +1,32 @@
 // src/hooks.server.ts
 
-import { createDbActions } from '$lib/server/db';
-import type { Handle } from '@sveltejs/kit';
+import { building } from '$app/environment';
+import { createAuth } from '$lib/server/auth';
+import { createDbActions, getDb } from '$lib/server/db';
+import { redirect, type Handle } from '@sveltejs/kit';
+import { svelteKitHandler } from 'better-auth/svelte-kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
-    // 1. Check for the D1 binding
-    const db = event.platform?.env.DB;
+  console.log( event.request.method, event.url.pathname);
+	if (building) return resolve(event);
 
-    if (db) {
-        // 2. Initialize the Drizzle Actions object
-        const dbActions = createDbActions(db);
+	const db = getDb({ d1Binding: event.platform?.env.DB });
+	const auth = createAuth(db);
 
-        // 3. Attach it to the event.locals object
-        // This makes it available to all server-side code (endpoints, server load functions)
-        event.locals.db = dbActions;
-    } else {
-        // Optional: Handle the case where bindings are missing (e.g., in a non-Cloudflare environment)
-        console.warn('D1 Database binding (DB) is missing from platform.env.');
+	event.locals.db = createDbActions(db);
+	event.locals.auth = auth;
+
+	if (event.route.id?.startsWith('/app')) {
+		const session = await auth.api.getSession({ headers: event.request.headers });
+    if (session) {
+
+      event.locals.session = session.session;
+      event.locals.user = session.user;
     }
+    else {
+      redirect(303, '/sign-in');
+    }
+	}
 
-    // 4. Continue processing the request
-    const response = await resolve(event);
-    return response;
+	return svelteKitHandler({ event, resolve, auth, building });
 };
