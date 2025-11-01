@@ -19,9 +19,6 @@ export const POST: RequestHandler = async ({ request, platform,locals }) => {
 	const tables = await db.exec("SELECT name FROM sqlite_master WHERE type='table';");
 	console.log('Tables in the database:', tables);
 	//create user
-	const newUser = await dbActions.addUser(Math.floor(Math.random() * 100));
-	console.log('New user added:', newUser);
-  //get all users
   const users = await dbActions.getUsers();
   console.log('All users:', users);
 

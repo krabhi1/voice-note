@@ -1,8 +1,10 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
-export const user = sqliteTable('user', {
+export const note = sqliteTable('note', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
-	age: integer('age')
+	content: text('content'),
 });
+
+export *  from '../auth/schema';
