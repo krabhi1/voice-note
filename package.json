@@ -14,12 +14,13 @@
 		"lint": "prettier --check .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
-		"db:generate": "drizzle-kit generate",
+		"db:generate": "drizzle-kit generate --config ./drizzle.local.config.ts",
 		"db:migrate:local": "wrangler d1 migrations apply voice-note --local",
 		"db:migrate:remote": "wrangler d1 migrations apply voice-note --remote",
 		"db:push": "drizzle-kit push",
 		"db:studio": "DATABASE_URL=$(find .wrangler/state/v3/d1 -name '*.sqlite' | head -n 1) pnpm drizzle-kit studio --config ./drizzle.local.config.ts",
-		"ba:generate": "DATABASE_URL=$(find .wrangler/state/v3/d1 -name '*.sqlite' | head -n 1) pnpx @better-auth/cli generate --output src/lib/server/auth/schema.ts"
+		"ba:generate": "DATABASE_URL=$(find .wrangler/state/v3/d1 -name '*.sqlite' | head -n 1) pnpx @better-auth/cli generate --output src/lib/server/auth/schema.ts",
+		"clean": "rm -rf .svelte-kit build node_modules .wrangler"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20251014.0",
@@ -48,6 +49,7 @@
 	},
 	"dependencies": {
 		"better-auth": "^1.3.34",
+		"nanoid": "^5.1.6",
 		"zod": "^4.1.12"
 	}
 }
