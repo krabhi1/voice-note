@@ -9,12 +9,17 @@ export const recording = sqliteTable('recording', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
-	title: text('title'),
-	file_url: text('file_url'),
-	duration: integer('duration'), //in ms
+	title: text('title').notNull(),
+	file_url: text('file_url').notNull(),
+	content_type: text('content_type').notNull(), //mime type like audio/mpeg, audio/wav
+	duration: integer('duration').notNull(), //in ms
+	size: integer('size').notNull(), //in bytes
 	createdAt: integer('created_at', { mode: 'timestamp_ms' })
 		.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
 		.notNull()
 });
+
+export type Recording = typeof recording.$inferSelect;
+export type NewRecording = typeof recording.$inferInsert;
 
 export * from '../auth/schema';

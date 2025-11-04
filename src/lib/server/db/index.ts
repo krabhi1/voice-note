@@ -6,6 +6,8 @@ import type { D1Database } from '@cloudflare/workers-types';
 
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql';
 import { drizzle as drizzleD1 } from 'drizzle-orm/d1';
+import type { NewRecording } from './schema';
+
 
 interface GetDbParams {
 	d1Binding?: D1Database;
@@ -28,10 +30,15 @@ export const getDb = ({ d1Binding, libsqlBinding }: GetDbParams): DrizzleClient 
 
 export function createDbActions(db: DrizzleClient) {
 	return {
-		getUsers: async () => {
-			return await db.query.user.findMany();
+		users: {
+			getAll: async () => {
+				return await db.query.user.findMany();
+			}
 		},
+		// Recordings
+		recordings: {
 
+		}
 	};
 }
 

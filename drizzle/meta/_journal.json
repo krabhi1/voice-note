@@ -22,6 +22,20 @@
       "when": 1762241653111,
       "tag": "0002_perfect_snowbird",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1762248274638,
+      "tag": "0003_free_mandroid",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1762282797255,
+      "tag": "0004_silky_luckman",
+      "breakpoints": true
     }
   ]
 }

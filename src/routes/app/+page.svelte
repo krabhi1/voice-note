@@ -23,7 +23,9 @@
 	{#if $session.isPending}
 		<p class="text-gray-600">Loading session...</p>
 	{:else}
-		<p class="mb-4 text-lg font-medium">Signed in as: {$session.data?.user.email}</p>
+		<p class="mb-4 text-lg font-medium">
+			Signed in as: {$session.data?.user.email}
+		</p>
 		<button
 			on:click={signOut}
 			class="mb-4 rounded bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600"

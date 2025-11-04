@@ -1,0 +1,1 @@
+ALTER TABLE `recording` ADD `content_type` text;
