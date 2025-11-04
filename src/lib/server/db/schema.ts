@@ -18,12 +18,3 @@ export const recording = sqliteTable('recording', {
 });
 
 export * from '../auth/schema';
-
-export const note = sqliteTable('note', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	content: text('content'),
-});
-
-export *  from '../auth/schema';
