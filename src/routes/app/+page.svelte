@@ -9,11 +9,19 @@
 	let { data }: PageProps = $props();
 
 	const recorder = new AudioRecorder();
+	let isRecording = $state(false);
+	let hasNewRecording = $state(false);
+	let isUploading = $state(false);
 
 	// Audio recorder event listeners
-	recorder.addEventListener('start', () => console.log('🎙️ Recording started'));
-	recorder.addEventListener('data', (chunk) => console.log('Data chunk:', chunk.size));
-	recorder.addEventListener('stop', (file) => console.log('✅ Recording stopped', file));
+	recorder.addEventListener('start', () => {
+		isRecording = true;
+		hasNewRecording = false;
+	});
+	recorder.addEventListener('stop', (file) => {
+		isRecording = false;
+		hasNewRecording = true;
+	});
 	recorder.addEventListener('error', (error) => console.error('❌ Recording error:', error));
 
 	async function handleSignOut() {
@@ -35,9 +43,14 @@
 		formData.set('voice-note', recording.file, 'recording.webm');
 		formData.set('duration', String(recording.duration * 1000));
 
+		isUploading = true;
+
 		return async ({ result, update }) => {
+			isUploading = false;
+
 			if (result.type === 'success') {
 				console.log('Upload successful!', result.data);
+				hasNewRecording = false;
 				await update();
 			} else if (result.type === 'failure') {
 				console.error('Upload failed:', result.data);
@@ -61,25 +74,43 @@
 
 <div class="mx-auto max-w-3xl p-4">
 	<!-- Controls Section -->
-	<div class="flex flex-col gap-2 p-2">
+	<div class="flex flex-row gap-2 p-2 justify-between">
 		<div class="flex flex-row gap-2">
-			<Button onclick={() => recorder.start()}>Start Recording</Button>
-			<Button variant="destructive" onclick={() => recorder.stop()}>Stop Recording</Button>
+			<Button
+				onclick={() => recorder.start()}
+				disabled={isRecording}
+			>
+				{isRecording ? 'Recording...' : 'Record'}
+			</Button>
+			<Button
+				variant="destructive"
+				onclick={() => recorder.stop()}
+				disabled={!isRecording}
+			>
+				Stop
+			</Button>
 			<form
 				method="POST"
 				action="?/uploadVoice"
 				enctype="multipart/form-data"
 				use:enhance={handleFormEnhance}
 			>
-				<Button variant="outline" type="submit">Upload Recording</Button>
+				<Button
+					variant="outline"
+					type="submit"
+					disabled={!hasNewRecording || isUploading}
+				>
+					{isUploading ? 'Uploading...' : 'Upload'}
+				</Button>
 			</form>
 		</div>
-		<button
+		<Button
 			onclick={handleSignOut}
-			class="mb-4 rounded bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600"
+			variant="destructive"
+			size="sm"
 		>
 			Sign Out
-		</button>
+		</Button>
 	</div>
 
 	<!-- Recordings Section -->
