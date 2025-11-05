@@ -10,7 +10,7 @@ export class StorageService {
 		const fileName = `${timestamp}-${nanoid()}.${extension}`;
 		const fileKey = `users/${userId}/audio/recordings/${fileName}`;
 
-		await this.bucket.put(fileKey, file, {
+		const result=await this.bucket.put(fileKey, file, {
 			httpMetadata: { contentType: file.type },
 			customMetadata: {
 				userId,
@@ -18,8 +18,7 @@ export class StorageService {
 				createdAt: new Date().toISOString()
 			}
 		});
-
-		return fileKey;
+		return result.key;
 	}
 
 	async get(fileKey: string) {

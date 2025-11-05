@@ -10,8 +10,8 @@ declare global {
 		// interface Error {}
 		interface Locals {
 			auth: BetterAuth;
-			session?: Session;
-			user?: User;
+			session: Session;
+			user: User;
 			services:Services
 		}
 		// interface PageData {}

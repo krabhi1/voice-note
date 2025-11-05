@@ -18,9 +18,8 @@
 			"binding": "DB",
 			"database_name": "voice-note",
 			"database_id": "1a3a1f70-f0e5-415f-b4a6-fd08e7d1040b",
-			"migrations_dir": "drizzle",
+			"migrations_dir": "drizzle"
 		}
 	],
-	"env": {
-	}
+	"env": {}
 }

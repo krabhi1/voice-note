@@ -22,7 +22,10 @@ export function createServices(db:DrizzleClient, env: App.Platform['env']) {
 				);
 			}
 			return _recordingService;
-		}
+		},
+		get storageService() {
+      return getStorageService();
+    }
 	};
 }
 

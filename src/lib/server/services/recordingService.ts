@@ -25,4 +25,7 @@ export class RecordingService {
     });
     return recording;
   }
+  async getRecordingsByUser(userId: string) {
+    return this.recordingRepository.getByUserId(userId);
+  }
 }

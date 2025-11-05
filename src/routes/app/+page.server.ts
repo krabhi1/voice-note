@@ -1,9 +1,10 @@
-import { error, json } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
+import { error, fail, json } from '@sveltejs/kit';
 import { z } from 'zod';
-export const load: PageServerLoad = ({ params }) => {
+import type { Actions, PageServerLoad } from './$types';
+export const load: PageServerLoad = async ({ params, depends, locals: { services, user } }) => {
+	const recordings = await services.recordingService.getRecordingsByUser(user.id);
 	return {
-		name: 'temp page'
+		recordings
 	};
 };
 
@@ -21,17 +22,16 @@ export const actions = {
 			const { file, duration, userId } = uploadSchema.parse({
 				file: formData.get('voice-note'),
 				duration: formData.get('duration'),
-				userId: user?.id
+				userId: user.id
 			});
 
 			const result = await services.recordingService.createRecording(file, duration, userId);
 			return { message: 'File uploaded successfully', data: result };
-		} catch (validationError) {
-			console.error('Validation error:', validationError);
-			return error(
-				400,
-				validationError instanceof z.ZodError ? z.prettifyError(validationError) : 'Invalid input data'
-			);
+		} catch (e) {
+			if (e instanceof z.ZodError) {
+				return fail(400, { errors: z.prettifyError(e) });
+			}
+			return fail(500, { errors: e instanceof Error ? e.message : 'Internal Server Error' });
 		}
 	}
 } satisfies Actions;

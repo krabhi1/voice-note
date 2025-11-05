@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+
+
 :root {
 	--radius: 0.65rem;
 	--background: hsl(0 0% 100%);
