@@ -1,6 +1,7 @@
 import type { DrizzleClient, NewRecording } from '$lib/server/db';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import * as schema from '$lib/server/db/schema';
+import type { PaginationParams } from '$lib/types/pagination';
 export class RecordingRepository {
 	constructor(private db: DrizzleClient) {}
 	async create(recording: NewRecording) {
@@ -12,6 +13,26 @@ export class RecordingRepository {
 			where: (recording) => eq(recording.userId, userId),
 			orderBy: (recording) => desc(recording.createdAt)
 		});
+	}
+
+	async getByUserIdPaginated(userId: string, { page, pageSize }: PaginationParams) {
+		const offset = (page - 1) * pageSize;
+		
+		return await this.db.query.recording.findMany({
+			where: (recording) => eq(recording.userId, userId),
+			orderBy: (recording) => desc(recording.createdAt),
+			limit: pageSize,
+			offset: offset
+		});
+	}
+
+	async countByUserId(userId: string): Promise<number> {
+		const recordings = await this.db.query.recording.findMany({
+			where: (recording) => eq(recording.userId, userId),
+			columns: { id: true }
+		});
+		
+		return recordings.length;
 	}
 
 	async getById(id: string) {

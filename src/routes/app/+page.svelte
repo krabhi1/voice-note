@@ -160,6 +160,6 @@
 
 	<!-- Recordings List (shown when not in active recording workflow) -->
 	{#if !isRecording && !isProcessing && !showEditingView}
-		<RecordingsList recordings={data.recordings} />
+		<RecordingsList recordings={data.recordings} pagination={data.pagination} />
 	{/if}
 </div>
