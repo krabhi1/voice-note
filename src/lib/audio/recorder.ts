@@ -187,7 +187,7 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 		// Immediately update and emit the current time
 		this._updateTimer();
 
-		this._intervalRef = setInterval(() => {
+		this._intervalRef = window.setInterval(() => {
 			this._updateTimer();
 		}, 1000);
 	}
