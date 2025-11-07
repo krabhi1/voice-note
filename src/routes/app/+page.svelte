@@ -3,7 +3,7 @@
 	import { client } from '$lib/auth-client';
 	import { AudioRecorder } from '$lib/audio/recorder';
 	import type { PageProps } from './$types';
-	import { formatTime, sleep } from '$lib/utils';
+	import { formatDuration, sleep } from '$lib/utils';
 	import type { AudioData } from './types';
 
 	import RecordingButton from './RecordingButton.svelte';
@@ -23,7 +23,7 @@
 	let audioData = $state<AudioData | null>(null);
 	let errorMessage = $state<string | null>(null);
 
-	const elapsedString = $derived.by(() => formatTime(elapsedSeconds));
+	const elapsedString = $derived.by(() => formatDuration(elapsedSeconds));
 
 	// Audio recorder event listeners
 	recorder.addEventListener('start', () => {
@@ -39,16 +39,12 @@
 		isRecording = false;
 		isPaused = false;
 		isProcessing = true;
-		await sleep(2000)
+		await sleep(2000);
 
 		try {
 			// Process the audio data
-			const recording = await recorder.getAudio();
-			if (recording) {
-				audioData = {
-					file: recording.file,
-					duration: recording.duration
-				};
+			audioData = await recorder.getAudio();
+			if (audioData) {
 				isProcessing = false;
 				showEditingView = true;
 			} else {
@@ -132,13 +128,11 @@
 <div class="bg-linear-to-br from-blue-900 via-blue-800 to-purple-900">
 	<!-- Error notification -->
 	{#if errorMessage}
-		<div class="absolute top-4 left-4 right-4 z-50">
+		<div class="absolute top-4 right-4 left-4 z-50">
 			<div class="mx-auto max-w-md rounded-lg bg-red-500/90 p-4 text-white backdrop-blur">
 				<div class="flex items-center justify-between">
 					<span>{errorMessage}</span>
-					<button onclick={clearError} class="ml-2 text-white/70 hover:text-white">
-						✕
-					</button>
+					<button onclick={clearError} class="ml-2 text-white/70 hover:text-white"> ✕ </button>
 				</div>
 			</div>
 		</div>
@@ -149,12 +143,7 @@
 		<RecordingButton {recorder} onSignOut={handleSignOut} />
 	{:else if isRecording}
 		<!-- Recording State -->
-		<RecordingView
-			{recorder}
-			{elapsedString}
-			{isPaused}
-			onPauseResume={handlePauseResume}
-		/>
+		<RecordingView {recorder} {elapsedString} {isPaused} onPauseResume={handlePauseResume} />
 	{:else if isProcessing}
 		<!-- Processing State -->
 		<ProcessingView {elapsedSeconds} />

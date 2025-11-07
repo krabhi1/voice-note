@@ -1,4 +1,5 @@
 import { EventEmitter } from '$lib/EventEmitter';
+import type { AudioData } from '../../routes/app/types';
 
 export type AudioRecorderEventMap = {
 	start: () => void;
@@ -124,20 +125,21 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 		return this.recorder?.state === 'paused';
 	}
 
-	async getAudio() {
+	async getAudio(): Promise<AudioData | null> {
 		if (this.stopPromise) {
 			await this.stopPromise;
 		}
-		if (this.lastFile && this.lastUrl) {
-			return {
-				file: this.lastFile,
-				duration: this.duration,
-				size: this.lastFile.size,
-				url: this.lastUrl
-			};
+
+		if (!this.lastFile || !this.lastUrl) {
+			return null;
 		}
 
-		return null;
+		return {
+			file: this.lastFile,
+			duration: this.duration,
+			size: this.lastFile.size,
+			url: this.lastUrl
+		};
 	}
 
 	getUrl(): string | null {
