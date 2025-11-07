@@ -6,6 +6,8 @@ export type AudioRecorderEventMap = {
 	data: (chunk: Blob) => void;
 	error: (err: unknown) => void;
 	timer: (elapsed: number) => void;
+	pause: () => void;
+	resume: () => void;
 };
 
 export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
@@ -17,11 +19,12 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 	private lastUrl: string | null = null;
 	private stopPromise: Promise<File> | null = null;
 	private duration: number = 0;
-	private startTime: number = 0;
-	private timerInterval: NodeJS.Timeout | null = null;
+	private _elapsedTime: number = 0; // Total time recorded, excluding pauses (in milliseconds)
+	private _lastStartTime: number = 0; // The timestamp when recording/resuming started (in milliseconds)
+	private _intervalRef: number | null = null; // The reference to the timer interval
 
 	constructor(mimeType: string = 'audio/webm') {
-		super(['start', 'stop', 'data', 'error', 'timer']);
+		super(['start', 'stop', 'data', 'error', 'timer', 'pause', 'resume']);
 		this.mimeType = mimeType;
 	}
 
@@ -40,8 +43,8 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 			};
 
 			this.recorder.onstart = () => {
-				this.startTime = Date.now();
-				this.startTimer();
+				this._elapsedTime = 0; // Reset total elapsed time
+				this._startTimer(); // Initializes _lastStartTime and starts the interval
 				this.emit('start');
 			};
 			this.recorder.onerror = (e) => this.emit('error', e.error);
@@ -64,13 +67,13 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 				const blob = new Blob(this.chunks, { type: this.mimeType });
 				const file = new File([blob], `recording-${Date.now()}.webm`, { type: this.mimeType });
 
-				this.stopTimer();
+				// Finalize time calculation before stopping the interval
+				this._stopTimer();
 				this.stream?.getTracks().forEach((t) => t.stop());
 				this.recorder = null;
 				this.stream = null;
 				this.chunks = [];
 				this.lastFile = file;
-				this.duration = 0;
 
 				if (this.lastUrl) URL.revokeObjectURL(this.lastUrl);
 				this.lastUrl = URL.createObjectURL(file);
@@ -78,7 +81,9 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 				const info = await this.getAudioInfo(this.lastUrl, file);
 				this.emit('stop', file, this.lastUrl, info);
 
-				this.duration = info.duration;
+				// duration is now the final calculated total elapsed time
+				this.duration = this._elapsedTime / 1000;
+				this._elapsedTime = 0; // Reset after successful stop
 				this.stopPromise = null;
 				resolve(file);
 			};
@@ -87,6 +92,36 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 		});
 
 		return this.stopPromise;
+	}
+
+	pause(): void {
+		if (!this.recorder || this.recorder.state !== 'recording') return;
+
+		// 1. Finalize the time for the current segment
+		this._stopTimer();
+
+		// 2. Pause the underlying recorder
+		this.recorder.pause();
+		this.emit('pause');
+	}
+
+	resume(): void {
+		if (!this.recorder || this.recorder.state !== 'paused') return;
+
+		// 1. Resume the underlying recorder
+		this.recorder.resume();
+
+		// 2. Start the timer for the next segment (resets _lastStartTime and continues from _elapsedTime)
+		this._startTimer();
+		this.emit('resume');
+	}
+
+	isRecording(): boolean {
+		return this.recorder?.state === 'recording';
+	}
+
+	isPausedState(): boolean {
+		return this.recorder?.state === 'paused';
 	}
 
 	async getAudio() {
@@ -111,40 +146,61 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 
 	/** Get duration (seconds) and size (bytes) */
 	private async getAudioInfo(url: string, file: File): Promise<{ duration: number; size: number }> {
-		// Use the Web Audio API for a reliable duration reading of WebM blobs
 		return new Promise((resolve, reject) => {
 			const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-			file
-				.arrayBuffer()
-				.then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer))
+
+			// Use Promise.all for cleaner async handling of arrayBuffer and decodeAudioData
+			Promise.all([file.arrayBuffer(), Promise.resolve(audioContext)])
+				.then(([arrayBuffer, context]) => context.decodeAudioData(arrayBuffer))
 				.then((decodedData) => {
 					const duration = decodedData.duration;
-					audioContext.close(); // Important: close context after use
+					audioContext.close();
 					resolve({ duration, size: file.size });
 				})
 				.catch((error) => {
 					audioContext.close();
 					console.error('Error decoding audio data:', error);
-					// Fallback or reject the promise
-					reject({ duration: 0, size: file.size });
+					// The size is always known, even if decoding fails.
+					resolve({ duration: 0, size: file.size });
 				});
 		});
 	}
 
-	private startTimer(): void {
-		// Emit initial timer event immediately
-		this.emit('timer', 0);
-		
-		this.timerInterval = setInterval(() => {
-			const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-			this.emit('timer', elapsed);
+	private _updateTimer(): void {
+		if (this._intervalRef) {
+			// Calculate the current duration since the last start/resume
+			const currentActiveDuration = Date.now() - this._lastStartTime;
+			// Total elapsed time is the base time + the current active duration
+			const totalElapsedMs = this._elapsedTime + currentActiveDuration;
+			const elapsedSeconds = Math.floor(totalElapsedMs / 1000);
+
+			this.emit('timer', elapsedSeconds);
+		}
+	}
+
+	private _startTimer(): void {
+		if (this._intervalRef) return; // Prevent double-starting
+
+		// Set the current timestamp for precise tracking
+		this._lastStartTime = Date.now();
+
+		// Immediately update and emit the current time
+		this._updateTimer();
+
+		this._intervalRef = setInterval(() => {
+			this._updateTimer();
 		}, 1000);
 	}
 
-	private stopTimer(): void {
-		if (this.timerInterval) {
-			clearInterval(this.timerInterval);
-			this.timerInterval = null;
+	private _stopTimer(): void {
+		if (this._intervalRef) {
+			// Calculate the final active duration since the last start
+			const currentActiveDuration = Date.now() - this._lastStartTime;
+			// Add it to the total elapsed time
+			this._elapsedTime += currentActiveDuration;
+
+			clearInterval(this._intervalRef);
+			this._intervalRef = null;
 		}
 	}
 }
