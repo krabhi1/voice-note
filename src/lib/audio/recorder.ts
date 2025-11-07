@@ -5,6 +5,7 @@ export type AudioRecorderEventMap = {
 	stop: (file: File, url: string, info: { duration: number; size: number }) => void;
 	data: (chunk: Blob) => void;
 	error: (err: unknown) => void;
+	timer: (elapsed: number) => void;
 };
 
 export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
@@ -16,9 +17,11 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 	private lastUrl: string | null = null;
 	private stopPromise: Promise<File> | null = null;
 	private duration: number = 0;
+	private startTime: number = 0;
+	private timerInterval: NodeJS.Timeout | null = null;
 
 	constructor(mimeType: string = 'audio/webm') {
-		super(['start', 'stop', 'data', 'error']);
+		super(['start', 'stop', 'data', 'error', 'timer']);
 		this.mimeType = mimeType;
 	}
 
@@ -36,7 +39,11 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 				}
 			};
 
-			this.recorder.onstart = () => this.emit('start');
+			this.recorder.onstart = () => {
+				this.startTime = Date.now();
+				this.startTimer();
+				this.emit('start');
+			};
 			this.recorder.onerror = (e) => this.emit('error', e.error);
 
 			this.recorder.start();
@@ -57,6 +64,7 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 				const blob = new Blob(this.chunks, { type: this.mimeType });
 				const file = new File([blob], `recording-${Date.now()}.webm`, { type: this.mimeType });
 
+				this.stopTimer();
 				this.stream?.getTracks().forEach((t) => t.stop());
 				this.recorder = null;
 				this.stream = null;
@@ -121,5 +129,22 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 					reject({ duration: 0, size: file.size });
 				});
 		});
+	}
+
+	private startTimer(): void {
+		// Emit initial timer event immediately
+		this.emit('timer', 0);
+		
+		this.timerInterval = setInterval(() => {
+			const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+			this.emit('timer', elapsed);
+		}, 1000);
+	}
+
+	private stopTimer(): void {
+		if (this.timerInterval) {
+			clearInterval(this.timerInterval);
+			this.timerInterval = null;
+		}
 	}
 }

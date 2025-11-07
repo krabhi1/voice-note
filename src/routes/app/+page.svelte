@@ -5,6 +5,7 @@
 	import { AudioRecorder } from '$lib/audio/recorder';
 	import Button from '$lib/components/ui/Button.svelte';
 	import type { PageProps, SubmitFunction } from './$types';
+	import { formatTime } from '$lib/utils';
 
 	let { data }: PageProps = $props();
 
@@ -12,15 +13,21 @@
 	let isRecording = $state(false);
 	let hasNewRecording = $state(false);
 	let isUploading = $state(false);
+	let elapsedSeconds = $state(0);
+	const elapsedString = $derived.by(() => formatTime(elapsedSeconds));
 
 	// Audio recorder event listeners
 	recorder.addEventListener('start', () => {
 		isRecording = true;
 		hasNewRecording = false;
+		elapsedSeconds = 0;
 	});
 	recorder.addEventListener('stop', (file) => {
 		isRecording = false;
 		hasNewRecording = true;
+	});
+	recorder.addEventListener('timer', (elapsed) => {
+		elapsedSeconds = elapsed;
 	});
 	recorder.addEventListener('error', (error) => console.error('❌ Recording error:', error));
 
@@ -73,21 +80,50 @@
 </script>
 
 <div class="mx-auto max-w-3xl p-4">
+	<!-- Recording Status Display -->
+	{#if isRecording}
+		<div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+			<div class="flex flex-col items-center gap-3">
+				<div class="flex items-center gap-3">
+					<div class="h-4 w-4 animate-pulse rounded-full bg-red-500"></div>
+					<span class="text-sm font-medium tracking-wide text-red-600 uppercase">
+						Recording in Progress
+					</span>
+				</div>
+				<div class="font-mono text-3xl font-bold text-red-700">
+					{elapsedString}
+				</div>
+
+			</div>
+		</div>
+	{:else if hasNewRecording}
+		<div class="mb-4 rounded-lg border border-green-200 bg-green-50 p-4 text-center">
+			<div class="flex items-center justify-center gap-2">
+				<div class="h-3 w-3 rounded-full bg-green-500"></div>
+				<span class="text-sm font-medium text-green-700"> Recording ready for upload </span>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Controls Section -->
-	<div class="flex flex-row gap-2 p-2 justify-between">
+	<div class="flex flex-row justify-between gap-2 p-2">
 		<div class="flex flex-row gap-2">
 			<Button
 				onclick={() => recorder.start()}
 				disabled={isRecording}
+				class={isRecording ? 'bg-red-500 hover:bg-red-600' : ''}
 			>
-				{isRecording ? 'Recording...' : 'Record'}
+				{#if isRecording}
+					<div class="flex items-center gap-2">
+						<div class="h-2 w-2 animate-pulse rounded-full bg-white"></div>
+						Recording {elapsedString}
+					</div>
+				{:else}
+					Start Recording
+				{/if}
 			</Button>
-			<Button
-				variant="destructive"
-				onclick={() => recorder.stop()}
-				disabled={!isRecording}
-			>
-				Stop
+			<Button variant="destructive" onclick={() => recorder.stop()} disabled={!isRecording}>
+				Stop Recording
 			</Button>
 			<form
 				method="POST"
@@ -95,22 +131,12 @@
 				enctype="multipart/form-data"
 				use:enhance={handleFormEnhance}
 			>
-				<Button
-					variant="outline"
-					type="submit"
-					disabled={!hasNewRecording || isUploading}
-				>
+				<Button variant="outline" type="submit" disabled={!hasNewRecording || isUploading}>
 					{isUploading ? 'Uploading...' : 'Upload'}
 				</Button>
 			</form>
 		</div>
-		<Button
-			onclick={handleSignOut}
-			variant="destructive"
-			size="sm"
-		>
-			Sign Out
-		</Button>
+		<Button onclick={handleSignOut} variant="destructive" size="sm">Sign Out</Button>
 	</div>
 
 	<!-- Recordings Section -->
