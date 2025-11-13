@@ -1,7 +1,8 @@
-import type { DrizzleClient, NewRecording } from '$lib/server/db';
+import type { DrizzleClient } from '$lib/server/db';
 import { desc, eq, sql } from 'drizzle-orm';
 import * as schema from '$lib/server/db/schema';
 import type { PaginationParams } from '$lib/types/pagination';
+import type { NewRecording } from '$lib/server/db/schema';
 export class RecordingRepository {
 	constructor(private db: DrizzleClient) {}
 	async create(recording: NewRecording) {
@@ -17,7 +18,7 @@ export class RecordingRepository {
 
 	async getByUserIdPaginated(userId: string, { page, pageSize }: PaginationParams) {
 		const offset = (page - 1) * pageSize;
-		
+
 		return await this.db.query.recording.findMany({
 			where: (recording) => eq(recording.userId, userId),
 			orderBy: (recording) => desc(recording.createdAt),
@@ -31,7 +32,7 @@ export class RecordingRepository {
 			where: (recording) => eq(recording.userId, userId),
 			columns: { id: true }
 		});
-		
+
 		return recordings.length;
 	}
 

@@ -2,44 +2,27 @@
 
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from './schema';
-import type { D1Database } from '@cloudflare/workers-types';
 
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql';
 import { drizzle as drizzleD1 } from 'drizzle-orm/d1';
-import type { NewRecording } from './schema';
-
 
 interface GetDbParams {
 	d1Binding?: D1Database;
-	libsqlBinding?: string;
+	databasePath?: string;
 }
 
 export type DrizzleD1Client = ReturnType<typeof drizzleD1<typeof schema>>;
 export type DrizzleLibsqlClient = ReturnType<typeof drizzleLibsql<typeof schema>>;
 export type DrizzleClient = DrizzleD1Client | DrizzleLibsqlClient;
 
-export const getDb = ({ d1Binding, libsqlBinding }: GetDbParams): DrizzleClient => {
+export const getDb = ({ d1Binding, databasePath }: GetDbParams): DrizzleClient => {
 	if (d1Binding) {
 		return drizzleD1(d1Binding, { schema });
 	}
-	if (libsqlBinding) {
-		return drizzleLibsql(`file:${libsqlBinding}`, { schema });
+	if (databasePath) {
+		return drizzleLibsql(`file:${databasePath}`, { schema });
 	}
-	throw new Error(`No database binding provided ${JSON.stringify({ d1Binding, libsqlBinding })}`);
+	throw new Error(`No database binding provided ${JSON.stringify({ d1Binding, databasePath })}`);
 };
-
-export function createDbActions(db: DrizzleClient) {
-	return {
-		users: {
-			getAll: async () => {
-				return await db.query.user.findMany();
-			}
-		},
-		// Recordings
-		recordings: {
-
-		}
-	};
-}
 
 export * from './schema';

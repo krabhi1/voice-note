@@ -1,5 +1,5 @@
 import { D1Database } from '@cloudflare/workers-types';
-import { createDbActions, type DrizzleClient } from '$lib/server/db';
+import {  type DrizzleClient } from '$lib/server/db';
 import type { BetterAuth } from '$lib/server/auth';
 import type { User, Session } from 'better-auth';
 import type { Services } from '$lib/server/services/factory';

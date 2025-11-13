@@ -1,4 +1,4 @@
-import type { RecordingRepository } from '$lib/repositories/recordingRepository';
+import type { RecordingRepository } from '$lib/server/repositories/recordingRepository';
 import type { StorageService } from './storageService';
 import type { PaginationParams, PaginatedResult } from '$lib/types/pagination';
 import { createPaginationMetadata } from '$lib/types/pagination';

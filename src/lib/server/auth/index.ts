@@ -2,13 +2,14 @@ import { createAuthConfig } from './config';
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$env/static/private';
 import { getRequestEvent } from "$app/server";
 import type { D1Database } from '@cloudflare/workers-types';
+import type { DrizzleClient } from '../db';
 
-export const createAuth = (d1Binding: D1Database) => {
+export const createAuth = (drizzleClient:DrizzleClient) => {
 	return createAuthConfig({
-		d1Binding,
+		drizzleClient,
 		googleClientId: GOOGLE_CLIENT_ID,
 		googleClientSecret: GOOGLE_CLIENT_SECRET,
-		getRequestEvent
+		isCLI:false,
 	});
 };
 

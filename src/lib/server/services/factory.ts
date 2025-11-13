@@ -1,4 +1,4 @@
-import { RecordingRepository } from '$lib/repositories/recordingRepository';
+import { RecordingRepository } from '$lib/server/repositories/recordingRepository';
 import type { DrizzleClient } from '../db';
 import { RecordingService } from './recordingService';
 import { StorageService } from './storageService';

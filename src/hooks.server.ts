@@ -12,7 +12,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (building) return resolve(event);
 
 	const db = getDb({ d1Binding: event.platform?.env.DB });
-	const auth = createAuth(event.platform?.env.DB!);
+	const auth = createAuth(db);
 
 	event.locals.auth = auth;
 	event.locals.services = createServices(db, event.platform?.env!);
