@@ -10,7 +10,7 @@
 	let { recorder, onSignOut }: Props = $props();
 </script>
 
-<div class="flex py-20 flex-col items-center justify-center p-8">
+<div class="flex py-20 flex-col items-center justify-center p-8 flex-1">
 	<div class="mb-8 text-center text-white/70">
 		<p class="text-lg">Click the button to start recording.</p>
 	</div>

@@ -26,6 +26,29 @@
 	let isPlaying = $state(false);
 	let currentTime = $state(0);
 	let audioElement = $state<HTMLAudioElement>();
+	let isAnalyzing = $state(false);
+
+	// Initialize waveform analysis
+	$effect(() => {
+		// if (audioData?.file && !waveformData && !isAnalyzing) {
+		// 	analyzeWaveform();
+		// }
+	});
+
+	async function analyzeWaveform() {
+		// if (!audioData?.file) return;
+
+		// isAnalyzing = true;
+		// try {
+		// 	const analyzer = new WaveformAnalyzer();
+		// 	const data = await analyzer.analyzeWithDynamicRange(audioData.file, 200, true);
+		// 	waveformData = data;
+		// } catch (error) {
+		// 	console.error('Failed to analyze waveform:', error);
+		// } finally {
+		// 	isAnalyzing = false;
+		// }
+	}
 
 	function togglePlayback() {
 		if (!audioElement || !audioData?.url) return;
@@ -103,17 +126,27 @@
 
 	<!-- Full waveform -->
 	<div class="mb-8 w-full max-w-4xl">
-		<WaveformVisualization
-			barCount={200}
-			height="h-24"
-			staticPattern={true}
-			trimHandles={true}
-			animated={false}
-			showProgress={true}
-			{currentTime}
-			duration={audioData.duration}
-			onSeek={handleSeek}
-		/>
+		{#if isAnalyzing}
+			<div class="flex h-24 items-center justify-center">
+				<div class="flex items-center gap-3 text-white/70">
+					<div class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+					<span class="text-sm">Analyzing audio...</span>
+				</div>
+			</div>
+		{:else}
+			<!-- <WaveformVisualization
+				barCount={200}
+				height="h-24"
+				staticPattern={true}
+				trimHandles={true}
+				animated={false}
+				showProgress={true}
+				{currentTime}
+				duration={audioData.duration}
+				onSeek={handleSeek}
+				{waveformData}
+			/> -->
+		{/if}
 
 		<!-- Timeline -->
 		<div class="mt-2 flex justify-between text-sm text-white/70">

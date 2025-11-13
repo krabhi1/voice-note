@@ -14,7 +14,7 @@ export type AudioRecorderEventMap = {
 export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 	private mimeType: string;
 	private recorder: MediaRecorder | null = null;
-	private stream: MediaStream | null = null;
+	public stream: MediaStream | null = null;
 	private chunks: BlobPart[] = [];
 	private lastFile: File | null = null;
 	private lastUrl: string | null = null;
