@@ -20,3 +20,15 @@ export function formatDuration(seconds: number): string {
 export function sleep(ms: number): Promise<void> {
  return new Promise(resolve => setTimeout(resolve, ms));
 }
+export function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
+  let timeout: number | null = null;
+  return (...args: Parameters<T>) => {
+    if (timeout !== null) {
+      clearTimeout(timeout);
+    }
+    timeout = window.setTimeout(() => {
+      fn(...args);
+      timeout = null;
+    }, delay);
+  };
+}

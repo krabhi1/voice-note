@@ -11,6 +11,7 @@
 	import ProcessingView from './ProcessingView.svelte';
 	import EditingView from './EditingView.svelte';
 	import RecordingsList from './RecordingsList.svelte';
+	import { EditorWaveEngine, type EditorWaveData } from '$lib/audio/EditorWaveEngine';
 
 	let { data }: PageProps = $props();
 
@@ -21,6 +22,7 @@
 	let elapsedSeconds = $state(0);
 	let isPaused = $state(false);
 	let audioData = $state<AudioData | null>(null);
+	let waveData = $state<EditorWaveData | null>(null);
 	let errorMessage = $state<string | null>(null);
 
 	const elapsedString = $derived.by(() => formatDuration(elapsedSeconds));
@@ -45,6 +47,9 @@
 			// Process the audio data
 			audioData = await recorder.getAudio();
 			if (audioData) {
+				const waveEngine = new EditorWaveEngine();
+				waveData = await waveEngine.load(audioData.file);
+				console.log('✅ Waveform data generated:', waveData);
 				isProcessing = false;
 				showEditingView = true;
 			} else {
@@ -125,7 +130,7 @@
 	}
 </script>
 
-<div class="bg-linear-to-br from-blue-900 via-blue-800 to-purple-900 min-h-svh flex flex-col ">
+<div class="flex min-h-svh flex-col bg-linear-to-br from-blue-900 via-blue-800 to-purple-900">
 	<!-- Error notification -->
 	{#if errorMessage}
 		<div class="absolute top-4 right-4 left-4 z-50">
@@ -147,10 +152,11 @@
 	{:else if isProcessing}
 		<!-- Processing State -->
 		<ProcessingView {elapsedSeconds} />
-	{:else if showEditingView && audioData}
+	{:else if showEditingView && audioData && waveData}
 		<!-- Editing State -->
 		<EditingView
 			{audioData}
+			{waveData}
 			{elapsedSeconds}
 			onClose={handleCloseEditing}
 			onSaveSuccess={handleSaveSuccess}

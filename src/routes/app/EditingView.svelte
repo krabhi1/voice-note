@@ -1,91 +1,77 @@
 <script lang="ts">
 	import { X, Play, Pause } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
-	import WaveformVisualization from './WaveformVisualization.svelte';
 	import type { AudioData } from './types';
 	import type { SubmitFunction } from './$types';
 	import { formatDuration } from '$lib/utils';
+	import { EditorWaveEngine, type EditorWaveData } from '$lib/audio/EditorWaveEngine';
+	import { PlaybackEngine } from '$lib/audio/PlaybackEngine';
+	import { onMount } from 'svelte';
+	import { EditorWaveformRenderer } from '$lib/audio/EditorWaveformRenderer';
 
 	interface Props {
 		audioData: AudioData;
+		waveData: EditorWaveData;
 		elapsedSeconds: number;
 		onClose: () => void;
 		onSaveSuccess: () => void;
 		onSaveError: (error: string) => void;
 	}
 
-	let {
-		audioData,
-		elapsedSeconds,
-		onClose,
-		onSaveSuccess,
-		onSaveError
-	}: Props = $props();
+	let { audioData, elapsedSeconds, onClose, onSaveSuccess, onSaveError, waveData }: Props =
+		$props();
 
 	let isUploading = $state(false);
 	let isPlaying = $state(false);
 	let currentTime = $state(0);
-	let audioElement = $state<HTMLAudioElement>();
-	let isAnalyzing = $state(false);
 
-	// Initialize waveform analysis
-	$effect(() => {
-		// if (audioData?.file && !waveformData && !isAnalyzing) {
-		// 	analyzeWaveform();
-		// }
+	let canvasEl = $state<HTMLCanvasElement | null>(null);
+	let renderer: EditorWaveformRenderer;
+
+	let playback = new PlaybackEngine();
+
+	playback.load(audioData.file);
+
+	onMount(() => {
+		if (!canvasEl) return;
+
+		// 1. init renderer
+		renderer = new EditorWaveformRenderer(canvasEl);
+
+		// 2. load waveform data
+		renderer.setData(waveData.peaks, waveData.duration);
+
+		// 3. playback engine updates UI
+		playback.addEventListener('progress', (time) => {
+			currentTime = time;
+			if (!renderer.isDragging) {
+				renderer.draw(time);
+			}
+		});
+
+		playback.addEventListener('end', () => {
+			currentTime = 0;
+			isPlaying = false;
+			renderer.draw(0);
+		});
+
+		renderer.addEventListener('onSeek', (time) => {
+			handleSeek(time);
+		});
 	});
 
-	async function analyzeWaveform() {
-		// if (!audioData?.file) return;
-
-		// isAnalyzing = true;
-		// try {
-		// 	const analyzer = new WaveformAnalyzer();
-		// 	const data = await analyzer.analyzeWithDynamicRange(audioData.file, 200, true);
-		// 	waveformData = data;
-		// } catch (error) {
-		// 	console.error('Failed to analyze waveform:', error);
-		// } finally {
-		// 	isAnalyzing = false;
-		// }
-	}
-
 	function togglePlayback() {
-		if (!audioElement || !audioData?.url) return;
+		if (isPlaying) playback.pause();
+		else playback.play();
 
-		if (isPlaying) {
-			audioElement.pause();
-		} else {
-			audioElement.play();
-		}
-	}
-
-	function handleAudioPlay() {
-		isPlaying = true;
-	}
-
-	function handleAudioPause() {
-		isPlaying = false;
-	}
-
-	function handleAudioEnded() {
-		isPlaying = false;
-		currentTime = 0;
-	}
-
-	function handleTimeUpdate() {
-		if (audioElement) {
-			// Update more frequently for smoother progress
-			currentTime = Math.floor(audioElement.currentTime * 10) / 10;
-		}
+		isPlaying = !isPlaying;
 	}
 
 	function handleSeek(time: number) {
-		if (audioElement) {
-			const seekTime = Math.max(0, Math.min(time, audioData.duration));
-			audioElement.currentTime = seekTime;
-			currentTime = seekTime;
-		}
+		const safe = Math.max(0, Math.min(time, audioData.duration));
+		playback.seek(safe);
+		currentTime = safe;
+		renderer.draw(safe);
 	}
 
 	const handleFormEnhance: SubmitFunction = async ({ formData, cancel }) => {
@@ -117,36 +103,15 @@
 </script>
 
 <div class="flex min-h-screen flex-col items-center justify-center p-8">
-	<button
-		onclick={onClose}
-		class="absolute top-4 right-4 text-white hover:text-white/70"
-	>
+	<button onclick={onClose} class="absolute top-4 right-4 text-white hover:text-white/70">
 		<X class="h-6 w-6" />
 	</button>
 
 	<!-- Full waveform -->
 	<div class="mb-8 w-full max-w-4xl">
-		{#if isAnalyzing}
-			<div class="flex h-24 items-center justify-center">
-				<div class="flex items-center gap-3 text-white/70">
-					<div class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
-					<span class="text-sm">Analyzing audio...</span>
-				</div>
-			</div>
-		{:else}
-			<!-- <WaveformVisualization
-				barCount={200}
-				height="h-24"
-				staticPattern={true}
-				trimHandles={true}
-				animated={false}
-				showProgress={true}
-				{currentTime}
-				duration={audioData.duration}
-				onSeek={handleSeek}
-				{waveformData}
-			/> -->
-		{/if}
+		<div class="relative h-64 w-full bg-gray-900">
+			<canvas bind:this={canvasEl} class="block h-full w-full"></canvas>
+		</div>
 
 		<!-- Timeline -->
 		<div class="mt-2 flex justify-between text-sm text-white/70">
@@ -154,38 +119,22 @@
 			<span>{formatDuration(audioData.duration)}</span>
 		</div>
 
-		<!-- Current time indicator -->
-		{#if isPlaying}
-			<div class="mt-3 text-center">
-				<div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur">
-					<div class="h-2 w-2 rounded-full bg-green-400 animate-pulse"></div>
-					<span class="text-sm font-medium text-white">
-						{formatDuration(currentTime)} / {formatDuration(audioData.duration)}
-					</span>
-				</div>
+		<div class="mt-3 text-center">
+			<div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur">
+				<div class="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
+				<span class="text-sm font-medium text-white">
+					{formatDuration(currentTime)} / {formatDuration(audioData.duration)}
+				</span>
 			</div>
-		{/if}
+		</div>
 	</div>
-
-	<!-- Hidden audio element -->
-	{#if audioData?.url}
-		<audio
-			bind:this={audioElement}
-			src={audioData.url}
-			onplay={handleAudioPlay}
-			onpause={handleAudioPause}
-			onended={handleAudioEnded}
-			ontimeupdate={handleTimeUpdate}
-			preload="auto"
-		></audio>
-	{/if}
 
 	<!-- Controls -->
 	<div class="flex items-center gap-4">
 		<button
 			onclick={togglePlayback}
 			disabled={!audioData?.url}
-			class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
+			class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 disabled:cursor-not-allowed disabled:opacity-50"
 		>
 			{#if isPlaying}
 				<Pause class="h-6 w-6" fill="currentColor" />
