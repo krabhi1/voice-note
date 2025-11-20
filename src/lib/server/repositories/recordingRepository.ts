@@ -1,5 +1,5 @@
 import type { DrizzleClient } from '$lib/server/db';
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql, count } from 'drizzle-orm';
 import * as schema from '$lib/server/db/schema';
 import type { PaginationParams } from '$lib/types/pagination';
 import type { NewRecording } from '$lib/server/db/schema';
@@ -28,17 +28,23 @@ export class RecordingRepository {
 	}
 
 	async countByUserId(userId: string): Promise<number> {
-		const recordings = await this.db.query.recording.findMany({
-			where: (recording) => eq(recording.userId, userId),
-			columns: { id: true }
-		});
+		// const recordings = await this.db.query.recording.findMany({
+		// 	where: (recording) => eq(recording.userId, userId),
+		// 	columns: { id: true }
+		// });
+		const count = await this.db.$count(schema.recording, eq(schema.recording.userId, userId));
 
-		return recordings.length;
+		return count;
 	}
 
 	async getById(id: string) {
 		return await this.db.query.recording.findFirst({
 			where: (recording) => eq(recording.id, id)
+		});
+	}
+	async getByIdAndUserId(recordId: string, userId: string) {
+		return await this.db.query.recording.findFirst({
+			where: (recording) => and(eq(recording.id, recordId), eq(recording.userId, userId))
 		});
 	}
 

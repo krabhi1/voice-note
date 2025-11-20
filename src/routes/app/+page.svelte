@@ -85,7 +85,7 @@
 	async function handleSignOut() {
 		await client.signOut({
 			fetchOptions: {
-				onSuccess: () => goto('/sign-in')
+				onSuccess: () => goto('/')
 			}
 		});
 	}

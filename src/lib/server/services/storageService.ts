@@ -34,4 +34,7 @@ export class StorageService {
 		const result = await this.bucket.list({ prefix });
 		return result.objects;
 	}
+  async getSignedUrl(fileKey: string, expiresInSeconds = 60) {
+    throw new Error('Method not implemented.');
+  }
 }

@@ -25,6 +25,6 @@ export function createAuthConfig({
 				clientSecret: googleClientSecret
 			}
 		},
-		...(!isCLI ? { plugins: [sveltekitCookies(getRequestEvent)] } : {})
+		...(!isCLI && { plugins: [sveltekitCookies(getRequestEvent)] })
 	});
 }

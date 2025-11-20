@@ -62,4 +62,11 @@ export class RecordingService {
       pagination
     };
   }
+  async getRecordingByIdAndUser(recordId: string, userId: string) {
+    const recording = await this.recordingRepository.getByIdAndUserId(
+      recordId,
+      userId
+    );
+    return recording;
+  }
 }
