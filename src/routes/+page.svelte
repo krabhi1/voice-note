@@ -6,29 +6,31 @@
 
 <section class="min-h-screen bg-gray-50 text-gray-900">
 	<!-- Header -->
-	<header class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-sm border-b">
-		<div class="mx-auto max-w-5xl px-6 h-16 flex items-center justify-between">
+	<header class="fixed top-0 right-0 left-0 z-50 border-b bg-white/90 backdrop-blur-sm">
+		<div class="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
 			<a href="/" class="text-lg font-semibold text-gray-900">VoiceNote</a>
 
-			<div>
-				{#if $session?.data}
-					<a
-						href="/app"
-						class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-						aria-label="Go to dashboard"
-					>
-						Dashboard
-					</a>
-				{:else}
-					<a
-						href="/login"
-						class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-						aria-label="Login"
-					>
-						Login
-					</a>
-				{/if}
-			</div>
+			{#if !$session.isPending}
+				<div>
+					{#if $session?.data}
+						<a
+							href="/app"
+							class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+							aria-label="Go to dashboard"
+						>
+							Dashboard
+						</a>
+					{:else}
+						<a
+							href="/login"
+							class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+							aria-label="Login"
+						>
+							Login
+						</a>
+					{/if}
+				</div>
+			{/if}
 		</div>
 	</header>
 
@@ -42,7 +44,6 @@
 			A fast, browser-based workspace for capturing and managing voice recordings with built-in
 			editing tools.
 		</p>
-
 	</div>
 
 	<!-- Problems Section -->

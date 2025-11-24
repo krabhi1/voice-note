@@ -39,7 +39,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			event.locals.user = session.user;
 		} else {
 			// redirect throws a control-flow exception in SvelteKit
-			redirect(303, '/sign-in');
+			redirect(303, '/login');
 		}
 	}
 
