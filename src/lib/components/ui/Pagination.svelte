@@ -48,10 +48,9 @@
 	const showFirstEllipsis = $derived(visiblePages[0] > 1);
 	const showLastEllipsis = $derived(visiblePages[visiblePages.length - 1] < pagination.totalPages);
 </script>
-
 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 	<!-- Results summary -->
-	<div class="text-sm text-white/70">
+	<div class="text-sm text-gray-700">
 		Showing {((pagination.currentPage - 1) * pagination.pageSize) + 1} to
 		{Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems)} of
 		{pagination.totalItems} recordings
@@ -60,15 +59,15 @@
 	<!-- Pagination controls -->
 	<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
 		<!-- Page size selector -->
-		<div class="flex items-center gap-2 text-sm text-white/70">
+		<div class="flex items-center gap-2 text-sm text-gray-700">
 			<span>Show:</span>
 			<select
 				value={pagination.pageSize}
 				onchange={(e) => changePageSize(Number(e.currentTarget.value) as ValidPageSize)}
-				class="rounded border border-white/20 bg-white/10 px-2 py-1 text-white backdrop-blur"
+				class="rounded border border-gray-200 bg-gray-50 px-2 py-1 text-gray-900 backdrop-blur"
 			>
 				{#each VALID_PAGE_SIZES as size}
-					<option value={size} class="bg-gray-800 text-white">{size}</option>
+					<option value={size} class="bg-white text-gray-900">{size}</option>
 				{/each}
 			</select>
 			<span>per page</span>
@@ -82,7 +81,7 @@
 					type="button"
 					disabled={!pagination.hasPreviousPage}
 					onclick={() => navigateToPage(pagination.currentPage - 1)}
-					class="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-white hover:bg-white/10 disabled:pointer-events-none disabled:opacity-50"
+					class="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-gray-900 hover:bg-gray-100 disabled:pointer-events-none disabled:opacity-50"
 				>
 					<span class="text-lg font-bold">←</span>
 				</button>
@@ -92,11 +91,11 @@
 					<button
 						type="button"
 						onclick={() => navigateToPage(1)}
-						class="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-white hover:bg-white/10"
+						class="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-gray-900 hover:bg-gray-100"
 					>
 						1
 					</button>
-					<span class="px-2 text-white/50">...</span>
+					<span class="px-2 text-gray-400">...</span>
 				{/if}
 
 				<!-- Page numbers -->
@@ -105,8 +104,8 @@
 						type="button"
 						onclick={() => navigateToPage(pageNumber)}
 						class={pageNumber === pagination.currentPage
-							? 'inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium bg-white/20 text-white'
-							: 'inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-white hover:bg-white/10'
+							? 'inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium bg-gray-200 text-gray-900'
+							: 'inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-gray-900 hover:bg-gray-100'
 						}
 					>
 						{pageNumber}
@@ -115,11 +114,11 @@
 
 				<!-- Last page -->
 				{#if showLastEllipsis}
-					<span class="px-2 text-white/50">...</span>
+					<span class="px-2 text-gray-400">...</span>
 					<button
 						type="button"
 						onclick={() => navigateToPage(pagination.totalPages)}
-						class="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-white hover:bg-white/10"
+						class="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-gray-900 hover:bg-gray-100"
 					>
 						{pagination.totalPages}
 					</button>
@@ -130,7 +129,7 @@
 					type="button"
 					disabled={!pagination.hasNextPage}
 					onclick={() => navigateToPage(pagination.currentPage + 1)}
-					class="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-white hover:bg-white/10 disabled:pointer-events-none disabled:opacity-50"
+					class="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-gray-900 hover:bg-gray-100 disabled:pointer-events-none disabled:opacity-50"
 				>
 					<span class="text-lg font-bold">→</span>
 				</button>

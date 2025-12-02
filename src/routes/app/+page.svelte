@@ -130,7 +130,7 @@
 	}
 </script>
 
-<div class="flex min-h-svh flex-col bg-linear-to-br from-blue-900 via-blue-800 to-purple-900">
+<div class="flex min-h-svh flex-col">
 	<!-- Error notification -->
 	{#if errorMessage}
 		<div class="absolute top-4 right-4 left-4 z-50">

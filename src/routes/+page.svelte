@@ -15,7 +15,7 @@
 					{#if $session?.data}
 						<a
 							href="/app"
-							class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+							class="rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-gray-700"
 							aria-label="Go to dashboard"
 						>
 							Dashboard
@@ -23,7 +23,7 @@
 					{:else}
 						<a
 							href="/login"
-							class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+							class="rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-gray-700"
 							aria-label="Login"
 						>
 							Login
@@ -38,7 +38,7 @@
 	<div class="mx-auto max-w-5xl px-6 pt-28 pb-24 text-center">
 		<h1 class="text-4xl font-bold tracking-tight md:text-6xl">
 			Record. Edit. Store.
-			<span class="text-blue-600">Your Voice Notes</span>
+			<span class="text-gray-600">Your Voice Notes</span>
 		</h1>
 		<p class="mx-auto mt-6 max-w-2xl text-lg text-gray-600">
 			A fast, browser-based workspace for capturing and managing voice recordings with built-in
@@ -126,25 +126,25 @@
 
 		<div class="mt-12 grid gap-8 md:grid-cols-4">
 			<div class="text-center">
-				<div class="text-4xl font-bold text-blue-600">1</div>
+				<div class="text-4xl font-bold text-gray-600">1</div>
 				<p class="mt-4 font-medium">Record</p>
 				<p class="mt-2 text-sm text-gray-600">Capture instantly with a single click.</p>
 			</div>
 
 			<div class="text-center">
-				<div class="text-4xl font-bold text-blue-600">2</div>
+				<div class="text-4xl font-bold text-gray-600">2</div>
 				<p class="mt-4 font-medium">Save</p>
 				<p class="mt-2 text-sm text-gray-600">Stored securely in the cloud.</p>
 			</div>
 
 			<div class="text-center">
-				<div class="text-4xl font-bold text-blue-600">3</div>
+				<div class="text-4xl font-bold text-gray-600">3</div>
 				<p class="mt-4 font-medium">Organize</p>
 				<p class="mt-2 text-sm text-gray-600">Find anything with metadata & search.</p>
 			</div>
 
 			<div class="text-center">
-				<div class="text-4xl font-bold text-blue-600">4</div>
+				<div class="text-4xl font-bold text-gray-600">4</div>
 				<p class="mt-4 font-medium">Edit</p>
 				<p class="mt-2 text-sm text-gray-600">Trim or clean silence easily.</p>
 			</div>

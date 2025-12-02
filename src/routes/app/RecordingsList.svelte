@@ -23,21 +23,19 @@
 	}
 </script>
 
-
-
 {#if pagination.totalItems > 0}
-	<div class=" bg-black/20 p-4">
+	<div class="bg-white p-4">
 		<div class="mx-auto max-w-4xl">
-			<h2 class="mb-4 text-xl font-bold text-white">Your Recordings</h2>
+			<h2 class="mb-4 text-xl font-bold text-gray-900">Your Recordings</h2>
 
 			{#if recordings?.length > 0}
 				<div class="grid gap-3 mb-6">
 					{#each recordings as recording}
-						<div class="rounded-lg bg-white/10 p-4 backdrop-blur">
+						<div class="rounded-lg bg-gray-50 p-4 backdrop-blur">
 							<div class="flex items-center justify-between">
 								<div class="flex flex-col">
-									<h3 class="font-semibold text-white">{recording.title}</h3>
-									<div class="flex items-center gap-4 text-sm text-white/70">
+									<h3 class="font-semibold text-gray-900">{recording.title}</h3>
+									<div class="flex items-center gap-4 text-sm text-gray-600">
 										<span>{formatDuration(recording.duration)}s</span>
 										<span>{formatFileSize(recording.size)}KB</span>
 										<span>{formatDate(recording.createdAt)}</span>
@@ -60,9 +58,9 @@
 		</div>
 	</div>
 {:else}
-	<div class="bg-black/20 p-4">
+	<div class="bg-white p-4">
 		<div class="mx-auto max-w-4xl">
-			<div class="text-center text-white/70 py-8">
+			<div class="text-center text-gray-600 py-8">
 				<p>No recordings found. Start by creating your first voice note!</p>
 			</div>
 		</div>

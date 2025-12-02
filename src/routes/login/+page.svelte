@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { signIn } from '$lib/auth-client';
-	import Button from '$lib/components/ui/Button.svelte';
 </script>
 
 <section class="flex min-h-screen items-center justify-center bg-gray-50 px-6 sm:px-8">
@@ -9,8 +8,8 @@
 		<p class="mt-3 text-sm text-gray-600">Continue with Google to use VoiceNote</p>
 
 		<div class="mt-8 flex flex-col items-center gap-4">
-			<Button
-			class="w-full max-w-sm"
+			<button
+				class="w-full max-w-sm bg-gray-700 px-3 py-2 text-white flex items-center justify-center  hover:bg-gray-800 "
 				onclick={async () => {
 					await signIn.social({
 						provider: 'google',
@@ -44,7 +43,7 @@
 						></path></g
 					></svg
 				>
-				Login with Google</Button
+				Login with Google</button
 			>
 		</div>
 	</div>

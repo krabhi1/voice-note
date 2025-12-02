@@ -47,9 +47,8 @@
 		return () => waveEngine.stop();
 	});
 </script>
-
 <!-- UI -->
-<div class="flex min-h-screen flex-col items-center justify-center p-8">
+<div class="flex min-h-screen flex-col items-center justify-center p-8 bg-white text-black">
 	<div class="mb-8 w-full max-w-4xl">
 		<!-- Waveform -->
 		<div class="mt-4 w-full h-[210px] rounded-lg overflow-hidden">
@@ -59,13 +58,13 @@
 
 	<!-- Timer + Controls -->
 	<div class="flex items-center gap-4">
-		<div class="flex items-center gap-3 rounded-full bg-black/50 px-3 py-2 text-white">
+		<div class="flex items-center gap-3 rounded-full bg-gray-800 px-3 py-2 text-white">
 			<button
 				onclick={() => {
 					recorder.stop();
 					waveEngine.stop();
 				}}
-				class="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600"
+				class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 text-white hover:bg-gray-500/80"
 			>
 				<Square class="h-4 w-4" fill="currentColor" />
 			</button>
@@ -78,7 +77,7 @@
 				onPauseResume(isPaused);
 				// The effect above will call waveEngine.pause() or resume()
 			}}
-			class="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/40"
+			class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-700 text-white hover:bg-gray-800"
 		>
 			{#if isPaused}
 				<Play class="h-5 w-5 animate-pulse" fill="currentColor" />

@@ -148,7 +148,7 @@ export class EditorWaveformRenderer extends EventEmitter<WaveformRenderEvents> {
 			const progressX = (currentTime / this.duration) * canvas.width;
 			const clampedX = Math.min(canvas.width - 1, Math.max(0, progressX));
 
-			ctx.fillStyle = '#00ffe1';
+			ctx.fillStyle = '#ff0000';
 			ctx.fillRect(Math.round(clampedX), 0, 1, canvas.height);
 		}
 	}
