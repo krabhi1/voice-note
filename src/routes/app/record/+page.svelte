@@ -11,6 +11,7 @@
 	import EditingView from './EditingView.svelte';
 	import { EditorWaveEngine, type EditorWaveData } from '$lib/audio/EditorWaveEngine';
 	import { onMount } from 'svelte';
+	import { Mic } from '@lucide/svelte';
 	let { data }: PageProps = $props();
 
 	const recorder = new AudioRecorder();
@@ -24,7 +25,6 @@
 
 	const elapsedString = $derived.by(() => formatDuration(elapsedSeconds));
 	onMount(() => {
-		recorder.start();
 		return () => {
 			recorder.stop();
 		};
@@ -104,7 +104,20 @@
 </script>
 
 <div class="flex min-h-svh flex-col">
-	{#if isRecording}
+	{#if !isRecording && !isProcessing && !showEditingView}
+		<div class="flex flex-1 flex-col items-center justify-center p-8 py-20">
+			<div class="mb-8 text-center text-gray-700">
+				<p class="text-lg">Click the button to start recording.</p>
+			</div>
+
+			<button
+				onclick={() => recorder.start()}
+				class="mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-gray-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-gray-700"
+			>
+				<Mic class="h-8 w-8" />
+			</button>
+		</div>
+	{:else if isRecording}
 		<!-- Recording State -->
 		<RecordingView {recorder} {elapsedString} {isPaused} onPauseResume={handlePauseResume} />
 	{:else if isProcessing}

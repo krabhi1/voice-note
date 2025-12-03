@@ -27,9 +27,10 @@
 	<div class="bg-white p-4">
 		<div class="mx-auto max-w-4xl">
 			<h2 class="mb-4 text-xl font-bold text-gray-900">Your Recordings</h2>
+			<Pagination {pagination} />
 
 			{#if recordings?.length > 0}
-				<div class="grid gap-3 mb-6">
+				<div class="mb-6 grid gap-3">
 					{#each recordings as recording}
 						<div class="rounded-lg bg-gray-50 p-4 backdrop-blur">
 							<div class="flex items-center justify-between">
@@ -54,13 +55,12 @@
 			{/if}
 
 			<!-- Pagination Controls -->
-			<Pagination {pagination} />
 		</div>
 	</div>
 {:else}
 	<div class="bg-white p-4">
 		<div class="mx-auto max-w-4xl">
-			<div class="text-center text-gray-600 py-8">
+			<div class="py-8 text-center text-gray-600">
 				<p>No recordings found. Start by creating your first voice note!</p>
 			</div>
 		</div>

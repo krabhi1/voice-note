@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { Mic, LayoutGrid, Trash2, Plus, Folder, FileAudio } from '@lucide/svelte';
+	import { page } from '$app/state';
+	const path = $derived(page.url.pathname);
 
 	// Mock data
 	const groups = [
@@ -35,19 +37,25 @@
 
 	<!-- Main Actions -->
 	<div class="flex flex-col gap-1 p-3">
-		<button
-			class="flex w-full items-center gap-2 rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
-		>
-			<Mic class="h-4 w-4" />
-			<span>Mic Record</span>
-		</button>
+		<a href="/app/record" class="block w-full" aria-label="Mic Record">
+			<button
+			class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium  text-gray-700 transition-colors hover:bg-gray-100
+			{path === '/app/record' && 'bg-gray-200!'}"
+			>
+				<Mic class="h-4 w-4" />
+				<span>Record</span>
+			</button>
+		</a>
 
-		<button
-			class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
-		>
-			<LayoutGrid class="h-4 w-4" />
-			<span>All</span>
-		</button>
+		<a href="/app" class="block w-full" aria-label="All">
+			<button
+				class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100
+				{path === '/app' && 'bg-gray-200!'}"
+			>
+				<LayoutGrid class="h-4 w-4" />
+				<span>All</span>
+			</button>
+		</a>
 	</div>
 
 	<!-- Groups -->
@@ -57,7 +65,7 @@
 		>
 			<span>Groups</span>
 			<button
-				class="rounded p-0.5 opacity-0 transition-opacity hover:bg-gray-200 hover:text-gray-900 group-hover:opacity-100"
+				class="rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-900"
 				aria-label="Add Group"
 			>
 				<Plus class="h-3 w-3" />
@@ -74,7 +82,7 @@
 						<span>{group.name}</span>
 					</button>
 					<!-- Nested Items -->
-					<div class="ml-2.5 mt-0.5 flex flex-col border-l border-gray-200 pl-2">
+					<div class="mt-0.5 ml-2.5 flex flex-col border-l border-gray-200 pl-2">
 						{#each group.items as item}
 							<button
 								class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
