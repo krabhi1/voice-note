@@ -7,7 +7,8 @@
 	import { PlaybackEngine } from '$lib/audio/PlaybackEngine';
 	import { onMount } from 'svelte';
 	import { EditorWaveformRenderer } from '$lib/audio/EditorWaveformRenderer';
-	import type { SubmitFunction } from './$types';
+	import type { ActionData, SubmitFunction } from './$types';
+	import { page } from '$app/state';
 
 	interface Props {
 		audioData: AudioData;
@@ -16,14 +17,16 @@
 		onClose: () => void;
 		onSaveSuccess: () => void;
 		onSaveError: (error: string) => void;
+		form: ActionData;
 	}
 
-	let { audioData, elapsedSeconds, onClose, onSaveSuccess, onSaveError, waveData }: Props =
+	let { audioData, elapsedSeconds, onClose, onSaveSuccess, onSaveError, waveData, form }: Props =
 		$props();
 
 	let isUploading = $state(false);
 	let isPlaying = $state(false);
 	let currentTime = $state(0);
+	let fileName = $state('New Recording');
 
 	let canvasEl = $state<HTMLCanvasElement | null>(null);
 	let renderer: EditorWaveformRenderer;
@@ -81,29 +84,52 @@
 			return;
 		}
 
-		formData.set('voice-note', audioData.file, 'recording.webm');
+		formData.set('voice-note', audioData.file, fileName);
 		formData.set('duration', String(audioData.duration * 1000));
+		formData.set('name', fileName);
 
 		isUploading = true;
 
 		return async ({ result, update }) => {
 			isUploading = false;
+			await update();
 			if (result.type === 'success') {
-				await update();
 				onSaveSuccess();
 			} else if (result.type === 'failure') {
-				console.error('Upload failed:', result.data);
-				const errorMessage = result.data?.errors || 'Unknown error occurred';
-				onSaveError(errorMessage);
+				if (result.data && 'formError' in result.data) {
+					//TODO show toast
+					const errorMessage = result.data.formError || 'Unknown error occurred';
+					onSaveError(errorMessage);
+				} else {
+					onSaveError('Unknown error occurred');
+				}
 			}
 		};
 	};
 </script>
-<div class="flex min-h-screen flex-col items-center justify-center p-8 bg-white text-gray-900">
+
+<div
+	class="relative flex min-h-screen flex-col items-center justify-center bg-white p-8 text-gray-900"
+>
 	<button onclick={onClose} class="absolute top-4 right-4 text-gray-600 hover:text-gray-800">
 		<X class="h-6 w-6" />
 	</button>
 
+	<div class="absolute top-2 left-2">
+		<input
+			type="text"
+			bind:value={fileName}
+			placeholder="Recording Name"
+			class="  px-3 py-2 text-sm placeholder-gray-400 focus:border focus:border-gray-300 focus:outline-none
+		{form?.fieldErrors?.name ? 'border-red-500' : ''}"
+		/>
+
+		{#if form?.fieldErrors?.name}
+			<div class="mt-1 text-sm text-red-600">
+				{form.fieldErrors.name}
+			</div>
+		{/if}
+	</div>
 	<!-- Full waveform -->
 	<div class="mb-8 w-full max-w-4xl">
 		<div class="relative h-64 w-full bg-black">

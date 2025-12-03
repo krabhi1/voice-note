@@ -10,7 +10,10 @@
 	import { EditorWaveEngine, type EditorWaveData } from '$lib/audio/EditorWaveEngine';
 	import { onMount } from 'svelte';
 	import { Mic } from '@lucide/svelte';
+	import type { PageProps } from './$types';
 
+	let { data, form }: PageProps = $props();
+	
 	const recorder = new AudioRecorder();
 	let isRecording = $state(false);
 	let isProcessing = $state(false);
@@ -88,7 +91,6 @@
 	}
 
 	function handleSaveSuccess() {
-	
 		gotoDashboard();
 	}
 
@@ -97,7 +99,6 @@
 		console.error('Save error:', error);
 	}
 	function gotoDashboard() {
-	    console.log('Navigating to dashboard...');
 		goto('/app');
 	}
 </script>
@@ -131,6 +132,7 @@
 			onClose={handleCloseEditing}
 			onSaveSuccess={handleSaveSuccess}
 			onSaveError={handleSaveError}
+			{form}
 		/>
 	{/if}
 </div>
