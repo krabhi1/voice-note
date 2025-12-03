@@ -2,7 +2,7 @@
 	import { Square, Play, Pause } from '@lucide/svelte';
 	import type { AudioRecorder } from '$lib/audio/recorder';
 	import { RecordingWaveEngine } from '$lib/audio/RecordingWaveEngine';
-	import RecordingWaveform from './RecordingWaveform.svelte';
+	import RecordingWaveform from '$lib/components/RecordingWaveform.svelte';
 
 	interface Props {
 		recorder: AudioRecorder;
