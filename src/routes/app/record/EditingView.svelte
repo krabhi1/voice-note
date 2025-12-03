@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { X, Play, Pause } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
-	import type { AudioData } from './types';
-	import type { SubmitFunction } from './$types';
+	import type { AudioData } from '../types';
 	import { formatDuration } from '$lib/utils';
-	import { EditorWaveEngine, type EditorWaveData } from '$lib/audio/EditorWaveEngine';
+	import { type EditorWaveData } from '$lib/audio/EditorWaveEngine';
 	import { PlaybackEngine } from '$lib/audio/PlaybackEngine';
 	import { onMount } from 'svelte';
 	import { EditorWaveformRenderer } from '$lib/audio/EditorWaveformRenderer';
+	import type { SubmitFunction } from './$types';
 
 	interface Props {
 		audioData: AudioData;
@@ -88,11 +88,9 @@
 
 		return async ({ result, update }) => {
 			isUploading = false;
-
 			if (result.type === 'success') {
-				console.log('Upload successful!', result.data);
-				onSaveSuccess();
 				await update();
+				onSaveSuccess();
 			} else if (result.type === 'failure') {
 				console.error('Upload failed:', result.data);
 				const errorMessage = result.data?.errors || 'Unknown error occurred';

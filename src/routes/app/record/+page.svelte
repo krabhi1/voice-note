@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { client } from '$lib/auth-client';
 	import { AudioRecorder } from '$lib/audio/recorder';
-	import type { PageProps } from './$types';
 	import { formatDuration, sleep } from '$lib/utils';
 	import type { AudioData } from '../types';
 
@@ -12,7 +10,6 @@
 	import { EditorWaveEngine, type EditorWaveData } from '$lib/audio/EditorWaveEngine';
 	import { onMount } from 'svelte';
 	import { Mic } from '@lucide/svelte';
-	let { data }: PageProps = $props();
 
 	const recorder = new AudioRecorder();
 	let isRecording = $state(false);
@@ -91,6 +88,7 @@
 	}
 
 	function handleSaveSuccess() {
+	
 		gotoDashboard();
 	}
 
@@ -99,6 +97,7 @@
 		console.error('Save error:', error);
 	}
 	function gotoDashboard() {
+	    console.log('Navigating to dashboard...');
 		goto('/app');
 	}
 </script>
