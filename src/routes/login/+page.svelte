@@ -1,15 +1,18 @@
 <script lang="ts">
 	import { signIn } from '$lib/auth-client';
+	import { Button } from '$lib/components/ui/button';
+	import * as Card from '$lib/components/ui/card';
 </script>
 
-<section class="flex min-h-screen items-center justify-center bg-gray-50 px-6 sm:px-8">
-	<div class="w-full max-w-md bg-white px-8 py-12 text-center shadow-lg ring-1 ring-gray-100">
-		<h1 class="text-3xl font-semibold tracking-tight text-gray-900">Login</h1>
-		<p class="mt-3 text-sm text-gray-600">Continue with Google to use VoiceNote</p>
-
-		<div class="mt-8 flex flex-col items-center gap-4">
-			<button
-				class="w-full max-w-sm bg-gray-700 px-3 py-2 text-white flex items-center justify-center  hover:bg-gray-800 "
+<section class="flex min-h-screen items-center justify-center px-6 sm:px-8">
+	<Card.Root class="w-full max-w-md ">
+		<Card.Header class="text-center">
+			<Card.Title class="text-3xl">Login</Card.Title>
+			<Card.Description>Continue with Google to use VoiceNote</Card.Description>
+		</Card.Header>
+		<Card.Content class="flex flex-col items-center gap-4">
+			<Button
+				class="w-full max-w-sm"
 				onclick={async () => {
 					await signIn.social({
 						provider: 'google',
@@ -18,7 +21,7 @@
 				}}
 			>
 				<svg
-					class="mr-3 inline-block h-5 w-5"
+					class="mr-2 h-4 w-4"
 					viewBox="-3 0 262 262"
 					xmlns="http://www.w3.org/2000/svg"
 					preserveAspectRatio="xMidYMid"
@@ -43,8 +46,8 @@
 						></path></g
 					></svg
 				>
-				Login with Google</button
-			>
-		</div>
-	</div>
+				Login with Google
+			</Button>
+		</Card.Content>
+	</Card.Root>
 </section>

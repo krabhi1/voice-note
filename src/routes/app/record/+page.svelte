@@ -11,9 +11,10 @@
 	import { onMount } from 'svelte';
 	import { Mic } from '@lucide/svelte';
 	import type { PageProps } from './$types';
+	import { Button } from '@/components/ui/button';
 
 	let { data, form }: PageProps = $props();
-	
+
 	const recorder = new AudioRecorder();
 	let isRecording = $state(false);
 	let isProcessing = $state(false);
@@ -110,12 +111,14 @@
 				<p class="text-lg">Click the button to start recording.</p>
 			</div>
 
-			<button
+			<Button
 				onclick={() => recorder.start()}
-				class="mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-gray-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-gray-700"
+				size="icon"
+				class="mb-8 h-20 w-20 rounded-full shadow-lg transition-all hover:scale-105"
 			>
-				<Mic class="h-8 w-8" />
-			</button>
+				<Mic class="size-8" />
+			</Button>
+
 		</div>
 	{:else if isRecording}
 		<!-- Recording State -->

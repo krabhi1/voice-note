@@ -28,3 +28,9 @@ pnpm db:generate
 #run migrations
 pnpm db:migrate:local
 ```
+
+## Utils
+```bash
+#install new components 
+pnpm dlx shadcn-svelte@latest add button
+```

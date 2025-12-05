@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Loader2 } from '@lucide/svelte';
+	import { Skeleton } from '$lib/components/ui/skeleton';
+
 	interface Props {
 		elapsedSeconds: number;
 	}
@@ -9,40 +12,36 @@
 	let currentDot = $state(0);
 
 	// Animate the dots every 500ms
-	let interval: NodeJS.Timeout;
-	
+	let interval: ReturnType<typeof setInterval>;
+
 	$effect(() => {
 		interval = setInterval(() => {
 			currentDot = (currentDot + 1) % dots.length;
 		}, 500);
-		
+
 		return () => {
 			if (interval) clearInterval(interval);
 		};
 	});
 </script>
-<div class="flex min-h-screen bg-white flex-col items-center justify-center p-8">
-	<div class="mb-8 text-center">
-		<div class="mb-4">
-			<!-- Processing animation -->
-			<div class="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 mx-auto mb-4">
-				<div class="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-600"></div>
-			</div>
+
+<div class="flex min-h-screen flex-col items-center justify-center bg-background p-8">
+	<div class="mx-auto flex w-full max-w-md flex-col items-center text-center">
+		<div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+			<Loader2 class="h-8 w-8 animate-spin text-primary" />
 		</div>
 
-		<h2 class="text-2xl font-semibold text-gray-900 mb-2">
+		<h2 class="mb-2 text-2xl font-semibold tracking-tight text-foreground">
 			Processing your recording{dots[currentDot]}
 		</h2>
 
-		<p class="text-gray-600">
+		<p class="mb-8 text-muted-foreground">
 			Preparing your {Math.round(elapsedSeconds)}s recording for editing
 		</p>
-	</div>
 
-	<!-- Optional: Show a progress bar or waveform preview -->
-	<div class="w-full max-w-md">
-		<div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-			<div class="h-full bg-linear-to-r from-gray-100 to-gray-900 animate-pulse"></div>
-		</div>
+		<!-- Optional: Show a progress bar or waveform preview -->
+		<!-- <div class="w-full">
+			<Skeleton class="h-2 w-full rounded-full" />
+		</div> -->
 	</div>
 </div>

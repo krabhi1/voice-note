@@ -3,6 +3,7 @@
 	import type { AudioRecorder } from '$lib/audio/recorder';
 	import { RecordingWaveEngine } from '$lib/audio/RecordingWaveEngine';
 	import RecordingWaveform from '$lib/components/RecordingWaveform.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		recorder: AudioRecorder;
@@ -47,43 +48,50 @@
 		return () => waveEngine.stop();
 	});
 </script>
+
 <!-- UI -->
-<div class="flex min-h-screen flex-col items-center justify-center p-8 bg-white text-black">
+<div class="flex min-h-screen flex-col items-center justify-center bg-background p-8">
 	<div class="mb-8 w-full max-w-4xl">
 		<!-- Waveform -->
-		<div class="mt-4 w-full h-[210px] rounded-lg overflow-hidden">
+		<div class=" mt-4 h-[210px] w-full overflow-hidden text-card-foreground">
 			<RecordingWaveform {bars} barWidth={2} gap={1} />
 		</div>
 	</div>
 
 	<!-- Timer + Controls -->
 	<div class="flex items-center gap-4">
-		<div class="flex items-center gap-3 rounded-full bg-gray-800 px-3 py-2 text-white">
-			<button
+		<div
+			class="flex items-center gap-3 rounded-full bg-secondary px-3 py-2 text-secondary-foreground shadow-sm"
+		>
+			<Button
+				variant="destructive"
+				size="icon-sm"
+				class="rounded-full"
 				onclick={() => {
 					recorder.stop();
 					waveEngine.stop();
 				}}
-				class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 text-white hover:bg-gray-500/80"
 			>
-				<Square class="h-4 w-4" fill="currentColor" />
-			</button>
+				<Square class="size-4" fill="currentColor" />
+			</Button>
 
-			<span class="text-sm">{elapsedString}</span>
+			<span class="text-sm font-medium">{elapsedString}</span>
 		</div>
 
-		<button
+		<Button
+			variant={isPaused ? 'outline' : 'default'}
+			size="icon-lg"
+			class="rounded-full shadow-md"
 			onclick={() => {
 				onPauseResume(isPaused);
 				// The effect above will call waveEngine.pause() or resume()
 			}}
-			class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-700 text-white hover:bg-gray-800"
 		>
 			{#if isPaused}
-				<Play class="h-5 w-5 animate-pulse" fill="currentColor" />
+				<Play class="size-5 animate-pulse" fill="currentColor" />
 			{:else}
-				<Pause class="h-5 w-5" fill="currentColor" />
+				<Pause class="size-5" fill="currentColor" />
 			{/if}
-		</button>
+		</Button>
 	</div>
 </div>

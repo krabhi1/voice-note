@@ -1,15 +1,9 @@
 <script lang="ts">
-	import {
-		Mic,
-		LayoutGrid,
-		Trash2,
-		Plus,
-		Folder,
-		FileAudio,
-		EllipsisVerticalIcon
-	} from '@lucide/svelte';
+	import { Mic, LayoutGrid, EllipsisVerticalIcon } from '@lucide/svelte';
 	import { page } from '$app/state';
-	import { DropdownMenu } from 'bits-ui';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Avatar from '$lib/components/ui/avatar';
+	import { Button } from '$lib/components/ui/button';
 
 	const path = $derived(page.url.pathname);
 
@@ -33,127 +27,124 @@
 
 {#snippet profile()}
 	<DropdownMenu.Root>
-		<DropdownMenu.Trigger class="flex w-full justify-between gap-3 p-2 hover:bg-gray-100">
-			<div class="flex items-center gap-3">
-				<img
-					src={user.image}
-					alt={user.name}
-					class="h-10 w-10 rounded-full object-cover ring-2 ring-gray-200"
-				/>
-				<div class="flex flex-col">
-					<span class="text-sm font-semibold text-gray-900">{user.name}</span>
-					<span class="text-xs text-gray-500">Free Plan</span>
-				</div>
-			</div>
-			<button aria-label="More" class="rounded p-1 text-gray-500">
-				<EllipsisVerticalIcon class="h-4 w-4" />
-			</button>
-		</DropdownMenu.Trigger>
-		<DropdownMenu.Portal>
-			<DropdownMenu.Content
-				side="right"
-				sideOffset={8}
-				class="z-50 mb-4 w-64 rounded-md border border-gray-200 bg-white shadow-lg"
-			>
-				<DropdownMenu.Item class="cursor-pointer px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
-					<div class="flex items-center gap-3">
-						<img
-							src={user.image}
-							alt={user.name}
-							class="h-10 w-10 rounded-full object-cover ring-2 ring-gray-100"
-						/>
-						<div class="min-w-0 flex-1">
-							<div class="flex items-center justify-between">
-								<span class="truncate text-sm font-semibold text-gray-900">{user.name}</span>
-							</div>
-							<span class="mt-0.5 block truncate text-xs text-gray-500">
-								{user.name.toLowerCase()}@example.com
-							</span>
+		<DropdownMenu.Trigger>
+			{#snippet child({ props })}
+				<Button
+					variant="ghost"
+					class="flex h-auto w-full justify-between gap-3 px-2 py-2 hover:bg-accent"
+					{...props}
+				>
+					<div class="flex items-center gap-3 text-left">
+						<Avatar.Root class="h-10 w-10 rounded-full border">
+							<Avatar.Image src={user.image} alt={user.name} />
+							<Avatar.Fallback>CN</Avatar.Fallback>
+						</Avatar.Root>
+						<div class="flex flex-col">
+							<span class="text-sm font-semibold">{user.name}</span>
+							<span class="text-xs text-muted-foreground">Free Plan</span>
 						</div>
 					</div>
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator class="my-1 border-t border-gray-200" />
-				<DropdownMenu.Item class="cursor-pointer px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-					Settings
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator class="my-1 border-t border-gray-200" />
-				<DropdownMenu.Item class="cursor-pointer px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-					Sign Out
-				</DropdownMenu.Item>
-			</DropdownMenu.Content>
-		</DropdownMenu.Portal>
+					<EllipsisVerticalIcon class="h-4 w-4 text-muted-foreground" />
+				</Button>
+			{/snippet}
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content side="right" sideOffset={8} class="mb-4 w-64">
+			<DropdownMenu.Label class="cursor-pointer py-2">
+				<div class="flex items-center gap-3">
+					<Avatar.Root class="h-10 w-10 rounded-full border">
+						<Avatar.Image src={user.image} alt={user.name} />
+						<Avatar.Fallback>CN</Avatar.Fallback>
+					</Avatar.Root>
+					<div class="min-w-0 flex-1">
+						<div class="flex items-center justify-between">
+							<span class="truncate text-sm">{user.name}</span>
+						</div>
+						<span class="mt-0.5 block truncate text-xs text-muted-foreground">
+							{user.name.toLowerCase()}@example.com
+						</span>
+					</div>
+				</div>
+			</DropdownMenu.Label>
+			<DropdownMenu.Separator />
+			<DropdownMenu.Item class="cursor-pointer">Settings</DropdownMenu.Item>
+			<DropdownMenu.Separator />
+			<DropdownMenu.Item class="cursor-pointer text-destructive focus:text-destructive">
+				Sign Out
+			</DropdownMenu.Item>
+		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 {/snippet}
 
-<aside class="flex h-full w-64 flex-col border-r border-gray-200 bg-gray-50 text-gray-900">
-	<div class="flex items-center justify-between px-3 py-3">
+<aside class="flex h-full w-64 flex-col border-r bg-muted/10">
+	<div class="flex items-center justify-between px-4 py-4">
 		<div class="flex items-center gap-3">
-			<span class="text-lg font-semibold text-gray-900">VoiceNote</span>
+			<span class="text-lg font-semibold">VoiceNote</span>
 		</div>
 	</div>
 	<!-- Main Actions -->
 	<div class="flex flex-col gap-1 p-3">
-		<a href="/app/record" class="block w-full" aria-label="Mic Record">
-			<button
-				class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100
-			{path === '/app/record' && 'bg-gray-200!'}"
-			>
-				<Mic class="h-4 w-4" />
-				<span>Record</span>
-			</button>
-		</a>
+		<Button
+			variant={path === '/app/record' ? 'secondary' : 'ghost'}
+			class="w-full justify-start"
+			href="/app/record"
+		>
+			<Mic class="mr-2 h-4 w-4" />
+			Record
+		</Button>
 
-		<a href="/app" class="block w-full" aria-label="All">
-			<button
-				class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100
-				{path === '/app' && 'bg-gray-200!'}"
-			>
-				<LayoutGrid class="h-4 w-4" />
-				<span>All</span>
-			</button>
-		</a>
-		<!-- <a href="/trash" class="block w-full" aria-label="All">
-			<button
-				class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-red-600
-				{path === '/trash' && 'bg-gray-200!'}"
-			>
-				<Trash2 class="h-4 w-4" />
-				<span>Trash</span>
-			</button>
-		</a> -->
+		<Button
+			variant={path === '/app' ? 'secondary' : 'ghost'}
+			class="w-full justify-start"
+			href="/app"
+		>
+			<LayoutGrid class="mr-2 h-4 w-4" />
+			All
+		</Button>
+		<!-- <Button
+			variant={path === '/trash' ? 'secondary' : 'ghost'}
+			class="w-full justify-start hover:text-destructive"
+			href="/trash"
+		>
+			<Trash2 class="mr-2 h-4 w-4" />
+			Trash
+		</Button> -->
 	</div>
 
 	<!-- Groups -->
 	<div class="flex-1 overflow-y-auto px-3 py-2">
 		<!-- <div
-			class="group mb-2 flex items-center justify-between px-2 text-xs font-semibold tracking-wider text-gray-500 uppercase"
+			class="group mb-2 flex items-center justify-between px-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
 		>
 			<span>Groups</span>
-			<button
-				class="rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-900"
+			<Button
+				variant="ghost"
+				size="icon"
+				class="h-5 w-5 opacity-0 transition-opacity group-hover:opacity-100"
 				aria-label="Add Group"
 			>
 				<Plus class="h-3 w-3" />
-			</button>
+			</Button>
 		</div>
 
 		<div class="flex flex-col gap-1">
 			{#each groups as group}
 				<div class="flex flex-col">
-					<button
-						class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+					<Button
+						variant="ghost"
+						class="w-full justify-start px-2 py-1.5 h-auto"
 					>
-						<Folder class="h-4 w-4 text-gray-400" />
+						<Folder class="mr-2 h-4 w-4 text-muted-foreground" />
 						<span>{group.name}</span>
-					</button>
-					<div class="mt-0.5 ml-2.5 flex flex-col border-l border-gray-200 pl-2">
+					</Button>
+					<div class="mt-0.5 ml-2.5 flex flex-col border-l pl-2">
 						{#each group.items as item}
-							<button
-								class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+							<Button
+								variant="ghost"
+								class="w-full justify-start px-2 py-1.5 h-auto text-muted-foreground"
 							>
-								<FileAudio class="h-3.5 w-3.5 text-gray-400" />
+								<FileAudio class="mr-2 h-3.5 w-3.5 text-muted-foreground" />
 								<span>{item}</span>
-							</button>
+							</Button>
 						{/each}
 					</div>
 				</div>
@@ -161,7 +152,7 @@
 		</div> -->
 	</div>
 	<!-- Profile Section -->
-	<div class="py-4 ">
+	<div class="mb-2 px-3">
 		{@render profile()}
 	</div>
 </aside>

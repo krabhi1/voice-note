@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { useSession } from '$lib/auth-client';
+	import Button from '@/components/ui/button/button.svelte';
 
 	const session = useSession();
 </script>
@@ -13,12 +14,8 @@
 			{#if !$session.isPending}
 				<div>
 					{#if $session?.data}
-						<a
-							href="/app"
-							class="rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-gray-700"
-							aria-label="Go to dashboard"
-						>
-							Dashboard
+						<a href="/app" aria-label="Go to dashboard">
+							<Button>Dashboard</Button>
 						</a>
 					{:else}
 						<a

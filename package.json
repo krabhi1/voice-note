@@ -21,12 +21,14 @@
 		"db:studio": "DATABASE_URL=$(find .wrangler/state/v3/d1 -name '*.sqlite' | head -n 1) pnpm drizzle-kit studio --config ./drizzle.local.config.ts",
 		"ba:generate": "DATABASE_URL=$(find .wrangler/state/v3/d1 -name '*.sqlite' | head -n 1) pnpx @better-auth/cli generate --config auth.cli.ts --output src/lib/server/auth/schema.ts",
 		"clean": "rm -rf .svelte-kit build node_modules .wrangler",
-		"predeploy":"pnpm db:migrate:remote",
-		"deploy":"wrangler deploy"
+		"predeploy": "pnpm db:migrate:remote",
+		"deploy": "wrangler deploy"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20251014.0",
+		"@internationalized/date": "^3.10.0",
 		"@libsql/client": "^0.15.15",
+		"@lucide/svelte": "^0.544.0",
 		"@sveltejs/adapter-cloudflare": "^7.2.3",
 		"@sveltejs/kit": "^2.43.2",
 		"@sveltejs/vite-plugin-svelte": "^6.2.0",
@@ -35,13 +37,17 @@
 		"@vitest/browser": "^3.2.4",
 		"drizzle-kit": "^0.31.4",
 		"drizzle-orm": "^0.44.5",
+		"mode-watcher": "^1.1.0",
 		"playwright": "^1.55.1",
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
 		"prettier-plugin-tailwindcss": "^0.6.14",
 		"svelte": "^5.39.5",
 		"svelte-check": "^4.3.2",
+		"svelte-sonner": "^1.0.7",
+		"tailwind-variants": "^3.2.2",
 		"tailwindcss": "^4.1.13",
+		"tw-animate-css": "^1.4.0",
 		"typescript": "^5.9.2",
 		"vite": "^7.1.7",
 		"vite-plugin-devtools-json": "^1.0.0",
@@ -50,7 +56,6 @@
 		"wrangler": "^4.45.2"
 	},
 	"dependencies": {
-		"@lucide/svelte": "^0.552.0",
 		"better-auth": "^1.3.34",
 		"bits-ui": "^2.14.2",
 		"clsx": "^2.1.1",
