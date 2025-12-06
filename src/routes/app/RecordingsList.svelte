@@ -7,6 +7,8 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import type { SubmitFunction } from './$types';
+
 	import {
 		Trash2Icon,
 		Play,
@@ -20,6 +22,8 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { type PaginationMeta, type ValidPageSize, VALID_PAGE_SIZES } from '$lib/utils/pagination';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { enhance } from '$app/forms';
+	import { toast } from 'svelte-sonner';
 
 	interface Props {
 		recordings: Recording[];
@@ -54,20 +58,30 @@
 	}
 </script>
 
-{#if pagination.totalItems > 0}
-	<div class="bg-background p-4">
-		<div class="mx-auto max-w-4xl space-y-6">
-			<h2 class="text-xl font-bold">Your Recordings</h2>
+<div class="bg-background p-4">
+	<div class="mx-auto max-w-4xl space-y-6">
+		<h2 class="text-xl font-bold">Your Recordings</h2>
 
-			{#if recordings?.length > 0}
-				{@render RecordingsTable({ recordings })}
-				{@render PaginationControls({ pagination })}
-			{/if}
+		{#if recordings?.length > 0}
+			{@render RecordingsTable({ recordings })}
+			{@render PaginationControls({ pagination })}
+		{:else}
+		<div class="rounded-lg border-dashed border-2 border-foreground/10 bg-muted/50 p-8 text-center">
+
+			<h3 class="text-lg font-semibold">No recordings yet</h3>
+			<p class="mt-2 text-sm text-muted-foreground">
+				Start recording your voice notes to keep track of ideas, reminders, and thoughts.
+			</p>
+
+			<div class="mt-4 flex justify-center">
+				<Button onclick={() => goto('/app/record')} class="h-10 px-4">
+					Start recording
+				</Button>
+			</div>
 		</div>
+		{/if}
 	</div>
-{:else}
-	{@render EmptyRecordingsCard()}
-{/if}
+</div>
 
 {#snippet RecordingsTable({ recordings }: { recordings: Recording[] })}
 	<div class="mb-6">
@@ -121,7 +135,7 @@
 
 						<Table.Cell>
 							<div class="flex justify-end">
-								{@render MoreOptionsButton()}
+								{@render MoreOptionsButton({ recordingId: recording.id })}
 							</div>
 						</Table.Cell>
 					</Table.Row>
@@ -131,7 +145,7 @@
 	</div>
 {/snippet}
 
-{#snippet MoreOptionsButton()}
+{#snippet MoreOptionsButton({ recordingId }: { recordingId: string })}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger>
 			{#snippet child({ props })}
@@ -167,30 +181,36 @@
 			</DropdownMenu.Item>
 
 			<DropdownMenu.Separator class="my-1 h-px bg-border" />
-
-			<DropdownMenu.Item
-				class="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm text-destructive hover:bg-destructive/10"
+			<form
+				method="POST"
+				action="?/deleteVoice"
+				use:enhance={(({ formData, cancel }) => {
+					formData.append('recordingId', recordingId);
+					return async ({ result, update }) => {
+						await update();
+						if (result.type === 'success') {
+							toast.success('Recording deleted successfully');
+						} else if (result.type === 'failure') {
+							const errorMessage = result.data?.message || 'An unexpected error occurred.';
+							toast.error(errorMessage);
+						}
+					};
+				}) as SubmitFunction}
 			>
-				<Trash2Icon class="h-4 w-4 text-destructive" />
-				<span>Delete</span>
-			</DropdownMenu.Item>
+				<DropdownMenu.Item
+					class="flex items-center gap-2 rounded px-2 py-2 text-sm hover:bg-destructive/10!"
+				>
+					<button type="submit" class="flex w-full items-center gap-2 text-destructive">
+						<Trash2Icon class="h-4 w-4 text-destructive" />
+						<span>Delete</span>
+					</button>
+				</DropdownMenu.Item>
+			</form>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 {/snippet}
 
-{#snippet EmptyRecordingsCard()}
-	<div class="bg-background p-4">
-		<div class="mx-auto max-w-4xl">
-			<Card.Root>
-				<Card.Content
-					class="flex flex-col items-center justify-center py-12 text-center text-muted-foreground"
-				>
-					<p>No recordings found. Start by creating your first voice note!</p>
-				</Card.Content>
-			</Card.Root>
-		</div>
-	</div>
-{/snippet}
+
 
 {#snippet PaginationControls({ pagination }: { pagination: PaginationMeta })}
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

@@ -3,6 +3,7 @@ import type { StorageService } from './storageService';
 import type { PaginationParams, PaginatedResult } from '$lib/utils/pagination';
 import { createPaginationMetadata } from '$lib/utils/pagination';
 import type { Recording } from '$lib/server/db/schema';
+import { fail } from '@sveltejs/kit';
 
 export class RecordingService {
   constructor(
@@ -68,5 +69,16 @@ export class RecordingService {
       userId
     );
     return recording;
+  }
+  async deleteRecording(recordId: string, userId: string) {
+    const recording = await this.getRecordingByIdAndUser(recordId, userId);
+    if (!recording) {
+      throw fail(404, { message: 'Recording not found' });
+    }
+    // Delete from storage
+    await this.storageService.delete(recording.file_url);
+    // Delete from database
+    await this.recordingRepository.deleteById(recordId);
+    return true;
   }
 }
