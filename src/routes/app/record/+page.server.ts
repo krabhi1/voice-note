@@ -7,7 +7,6 @@ const uploadSchema = z.object({
 		.instanceof(File, { message: 'A file is required.' })
 		.refine((file) => file.size > 0, 'File cannot be empty.'),
 	duration: z.coerce.number().positive('Duration must be positive.'),
-	userId: z.string().min(1, 'User ID is required.'),
 	name: z.string().min(1, 'Name is required.')
 });
 
@@ -22,8 +21,8 @@ export const actions = {
 			});
 		}
 
-		const { 'voice-note': file, duration, userId, name } = parsed.data;
-		const result = await services.recordingService.createRecording(file, duration, userId, name);
+		const { 'voice-note': file, duration, name } = parsed.data;
+		const result = await services.recordingService.createRecording(file, duration, user.id, name);
 		return {
 			success: true,
 			data: result

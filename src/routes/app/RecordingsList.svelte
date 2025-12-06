@@ -56,6 +56,10 @@
 	function formatDate(dateString: Date): string {
 		return dateString.toLocaleString();
 	}
+
+	function playRecording(recordingId: string) {
+		goto(`/app/${recordingId}`);
+	}
 </script>
 
 <div class="bg-background p-4">
@@ -66,19 +70,18 @@
 			{@render RecordingsTable({ recordings })}
 			{@render PaginationControls({ pagination })}
 		{:else}
-		<div class="rounded-lg border-dashed border-2 border-foreground/10 bg-muted/50 p-8 text-center">
+			<div
+				class="rounded-lg border-2 border-dashed border-foreground/10 bg-muted/50 p-8 text-center"
+			>
+				<h3 class="text-lg font-semibold">No recordings yet</h3>
+				<p class="mt-2 text-sm text-muted-foreground">
+					Start recording your voice notes to keep track of ideas, reminders, and thoughts.
+				</p>
 
-			<h3 class="text-lg font-semibold">No recordings yet</h3>
-			<p class="mt-2 text-sm text-muted-foreground">
-				Start recording your voice notes to keep track of ideas, reminders, and thoughts.
-			</p>
-
-			<div class="mt-4 flex justify-center">
-				<Button onclick={() => goto('/app/record')} class="h-10 px-4">
-					Start recording
-				</Button>
+				<div class="mt-4 flex justify-center">
+					<Button onclick={() => goto('/app/record')} class="h-10 px-4">Start recording</Button>
+				</div>
 			</div>
-		</div>
 		{/if}
 	</div>
 </div>
@@ -105,7 +108,12 @@
 				{#each recordings as recording}
 					<Table.Row class="group">
 						<Table.Cell>
-							<Button variant="ghost" size="icon" class="h-8 w-8">
+							<Button
+								onclick={() => playRecording(recording.id)}
+								variant="ghost"
+								size="icon"
+								class="h-8 w-8"
+							>
 								<Play class="h-4 w-4" />
 								<span class="sr-only">Play</span>
 							</Button>
@@ -209,8 +217,6 @@
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 {/snippet}
-
-
 
 {#snippet PaginationControls({ pagination }: { pagination: PaginationMeta })}
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
