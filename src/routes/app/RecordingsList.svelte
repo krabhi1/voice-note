@@ -62,12 +62,18 @@
 	}
 </script>
 
-<div class="bg-background p-4">
-	<div class="mx-auto max-w-4xl space-y-6">
-		<h2 class="text-xl font-bold">Your Recordings</h2>
+<div class="bg-background p-4 h-screen flex flex-col">
+	<div class="mx-auto w-full  lg:max-w-4xl flex flex-col flex-1 min-h-0">
+		<!-- Header -->
+		<h2 class="text-xl font-bold mb-6">Your Recordings</h2>
 
 		{#if recordings?.length > 0}
-			{@render RecordingsTable({ recordings })}
+			<!-- Table Container with flex-1 and scroll -->
+			<div class="flex-1 overflow-auto mb-6">
+				{@render RecordingsTable({ recordings })}
+			</div>
+
+			<!-- Pagination at bottom -->
 			{@render PaginationControls({ pagination })}
 		{:else}
 			<div
@@ -87,70 +93,68 @@
 </div>
 
 {#snippet RecordingsTable({ recordings }: { recordings: Recording[] })}
-	<div class="mb-6">
-		<Table.Root>
-			<Table.Header>
-				<Table.Row>
-					<Table.Head class="w-10">
-						<span class="sr-only">Play</span>
-					</Table.Head>
-					<Table.Head>Name</Table.Head>
-					<!-- <Table.Head class="hidden w-32 md:table-cell">Group</Table.Head> -->
-					<Table.Head class="hidden w-40 sm:table-cell">CreatedAt</Table.Head>
-					<!-- <Table.Head class="w-10 text-center">
-										<StarIcon class="mx-auto h-4 w-4" />
-									</Table.Head> -->
-					<Table.Head class="w-16 text-end">Duration</Table.Head>
-					<Table.Head class="w-8"></Table.Head>
+	<Table.Root>
+		<Table.Header>
+			<Table.Row>
+				<Table.Head class="w-10">
+					<span class="sr-only">Play</span>
+				</Table.Head>
+				<Table.Head>Name</Table.Head>
+				<!-- <Table.Head class="hidden w-32 md:table-cell">Group</Table.Head> -->
+				<Table.Head class="hidden w-40 sm:table-cell">CreatedAt</Table.Head>
+				<!-- <Table.Head class="w-10 text-center">
+									<StarIcon class="mx-auto h-4 w-4" />
+								</Table.Head> -->
+				<Table.Head class="w-16 text-end">Duration</Table.Head>
+				<Table.Head class="w-8"></Table.Head>
+			</Table.Row>
+		</Table.Header>
+		<Table.Body>
+			{#each recordings as recording}
+				<Table.Row class="group">
+					<Table.Cell>
+						<Button
+							onclick={() => playRecording(recording.id)}
+							variant="ghost"
+							size="icon"
+							class="h-8 w-8"
+						>
+							<Play class="h-4 w-4" />
+							<span class="sr-only">Play</span>
+						</Button>
+					</Table.Cell>
+
+					<Table.Cell class="min-w-0 truncate font-medium">
+						{recording.title}
+					</Table.Cell>
+
+					<!-- <Table.Cell
+										class="hidden w-32 truncate text-sm text-muted-foreground md:table-cell"
+									></Table.Cell> -->
+
+					<Table.Cell class="hidden w-40 text-sm text-muted-foreground sm:table-cell">
+						{formatDate(recording.createdAt)}
+					</Table.Cell>
+
+					<!-- <Table.Cell class="text-center">
+										<div class="flex items-center justify-center">
+											<Checkbox aria-label="Favorite" />
+										</div>
+									</Table.Cell> -->
+
+					<Table.Cell class="text-end font-mono text-sm text-muted-foreground">
+						{formatDuration(recording.duration)}s
+					</Table.Cell>
+
+					<Table.Cell>
+						<div class="flex justify-end">
+							{@render MoreOptionsButton({ recordingId: recording.id })}
+						</div>
+					</Table.Cell>
 				</Table.Row>
-			</Table.Header>
-			<Table.Body>
-				{#each recordings as recording}
-					<Table.Row class="group">
-						<Table.Cell>
-							<Button
-								onclick={() => playRecording(recording.id)}
-								variant="ghost"
-								size="icon"
-								class="h-8 w-8"
-							>
-								<Play class="h-4 w-4" />
-								<span class="sr-only">Play</span>
-							</Button>
-						</Table.Cell>
-
-						<Table.Cell class="min-w-0 truncate font-medium">
-							{recording.title}
-						</Table.Cell>
-
-						<!-- <Table.Cell
-											class="hidden w-32 truncate text-sm text-muted-foreground md:table-cell"
-										></Table.Cell> -->
-
-						<Table.Cell class="hidden w-40 text-sm text-muted-foreground sm:table-cell">
-							{formatDate(recording.createdAt)}
-						</Table.Cell>
-
-						<!-- <Table.Cell class="text-center">
-											<div class="flex items-center justify-center">
-												<Checkbox aria-label="Favorite" />
-											</div>
-										</Table.Cell> -->
-
-						<Table.Cell class="text-end font-mono text-sm text-muted-foreground">
-							{formatDuration(recording.duration)}s
-						</Table.Cell>
-
-						<Table.Cell>
-							<div class="flex justify-end">
-								{@render MoreOptionsButton({ recordingId: recording.id })}
-							</div>
-						</Table.Cell>
-					</Table.Row>
-				{/each}
-			</Table.Body>
-		</Table.Root>
-	</div>
+			{/each}
+		</Table.Body>
+	</Table.Root>
 {/snippet}
 
 {#snippet MoreOptionsButton({ recordingId }: { recordingId: string })}
@@ -222,13 +226,13 @@
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class="flex items-center gap-4">
 			<div class="flex items-center gap-2 text-sm text-muted-foreground">
-				<span>Count:</span>
+				<span>Per page:</span>
 				<Select.Root
 					type="single"
 					value={String(pagination.pageSize)}
 					onValueChange={(v) => changePageSize(Number(v) as ValidPageSize)}
 				>
-					<Select.Trigger class="h-8 w-20">
+					<Select.Trigger>
 						{pagination.pageSize}
 					</Select.Trigger>
 					<Select.Content>
