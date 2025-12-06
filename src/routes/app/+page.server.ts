@@ -19,4 +19,5 @@ export const load: PageServerLoad = async ({ params, depends, locals: { services
 };
 
 export const actions = {
+
 } satisfies Actions;
