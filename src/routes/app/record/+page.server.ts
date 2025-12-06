@@ -3,44 +3,30 @@ import { z } from 'zod';
 import type { Actions } from './$types';
 
 const uploadSchema = z.object({
-	file: z.instanceof(File).refine((file) => file.size > 0, 'File cannot be empty'),
-	duration: z.coerce.number().positive('Duration must be positive'),
-	userId: z.string().min(1, 'User ID is required'),
-	name: z.string().min(1, 'Name is required')
+	'voice-note': z
+		.instanceof(File, { message: 'A file is required.' })
+		.refine((file) => file.size > 0, 'File cannot be empty.'),
+	duration: z.coerce.number().positive('Duration must be positive.'),
+	userId: z.string().min(1, 'User ID is required.'),
+	name: z.string().min(1, 'Name is required.')
 });
 
 export const actions = {
 	uploadVoice: async ({ request, locals: { services, user } }) => {
-		const formData = await request.formData();
-
-		const parsed = uploadSchema.safeParse({
-			file: formData.get('voice-note'),
-			duration: formData.get('duration'),
-			userId: user.id,
-			name: formData.get('name')
-		});
-
+		const parsed = uploadSchema.safeParse(Object.fromEntries(await request.formData()));
 		if (!parsed.success) {
 			const fieldErrors = parsed.error.flatten().fieldErrors;
-
 			return fail(400, {
-				fieldErrors
+				errors: fieldErrors,
+				message: 'Validation failed'
 			});
 		}
 
-		const { file, duration, userId, name } = parsed.data;
-
-		try {
-			const result = await services.recordingService.createRecording(file, duration, userId, name);
-
-			return {
-				success: true,
-				data: result
-			};
-		} catch (err) {
-			return fail(500, {
-				formError: 'Failed to upload file'
-			});
-		}
+		const { 'voice-note': file, duration, userId, name } = parsed.data;
+		const result = await services.recordingService.createRecording(file, duration, userId, name);
+		return {
+			success: true,
+			data: result
+		};
 	}
 } satisfies Actions;

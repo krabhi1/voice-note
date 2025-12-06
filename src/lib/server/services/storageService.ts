@@ -2,6 +2,7 @@
 
 import { nanoid } from 'nanoid';
 export class StorageService {
+	
 	constructor(private bucket: R2Bucket) {}
 
 	async uploadRecording(file: File, userId: string): Promise<string> {
@@ -10,7 +11,7 @@ export class StorageService {
 		const fileName = `${timestamp}-${nanoid()}.${extension}`;
 		const fileKey = `users/${userId}/audio/recordings/${fileName}`;
 
-		const result=await this.bucket.put(fileKey, file, {
+		const result = await this.bucket.put(fileKey, file, {
 			httpMetadata: { contentType: file.type },
 			customMetadata: {
 				userId,
@@ -34,7 +35,7 @@ export class StorageService {
 		const result = await this.bucket.list({ prefix });
 		return result.objects;
 	}
-  async getSignedUrl(fileKey: string, expiresInSeconds = 60) {
-    throw new Error('Method not implemented.');
-  }
+	async getSignedUrl(fileKey: string, expiresInSeconds = 60) {
+		throw new Error('Method not implemented.');
+	}
 }

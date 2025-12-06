@@ -2,30 +2,26 @@
 	import { X, Play, Pause } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
 	import type { AudioData } from '$lib/types';
-	import { formatDuration, sleep } from '$lib/utils';
-	import { type EditorWaveData } from '$lib/audio/EditorWaveEngine';
+	import { formatDuration } from '$lib/utils';
+	import type { EditorWaveData } from '$lib/audio/EditorWaveEngine';
 	import { PlaybackEngine } from '$lib/audio/PlaybackEngine';
 	import { onMount } from 'svelte';
 	import { EditorWaveformRenderer } from '$lib/audio/EditorWaveformRenderer';
 	import type { ActionData, SubmitFunction } from './$types';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Card } from '$lib/components/ui/card';
 	import { Spinner } from '@/components/ui/spinner';
 
 	interface Props {
 		audioData: AudioData;
 		waveData: EditorWaveData;
-		elapsedSeconds: number;
 		onClose: () => void;
 		onSaveSuccess: () => void;
 		onSaveError: (error: string) => void;
-		form: ActionData;
+		form?: ActionData;
 	}
 
-	let { audioData, elapsedSeconds, onClose, onSaveSuccess, onSaveError, waveData, form }: Props =
-		$props();
+	let { audioData, onClose, onSaveSuccess, onSaveError, waveData, form }: Props = $props();
 
 	let isUploading = $state(false);
 	let isPlaying = $state(false);
@@ -33,25 +29,22 @@
 	let fileName = $state('New Recording');
 
 	let canvasEl = $state<HTMLCanvasElement | null>(null);
-	let renderer: EditorWaveformRenderer;
+	let renderer: EditorWaveformRenderer | null = null;
 
-	let playback = new PlaybackEngine();
-
+	const playback = new PlaybackEngine();
 	playback.load(audioData.file);
 
-	onMount(() => {
-		if (!canvasEl) return;
+	function setupPlaybackAndRenderer() {
+		if (!canvasEl || renderer) return;
 
-		// 1. init renderer
 		renderer = new EditorWaveformRenderer(canvasEl);
-
-		// 2. load waveform data
 		renderer.setData(waveData.peaks, waveData.duration);
 
-		// 3. playback engine updates UI
+		currentTime = 0;
+
 		playback.addEventListener('progress', (time) => {
 			currentTime = time;
-			if (!renderer.isDragging) {
+			if (renderer && !renderer.isDragging) {
 				renderer.draw(time);
 			}
 		});
@@ -59,31 +52,35 @@
 		playback.addEventListener('end', () => {
 			currentTime = 0;
 			isPlaying = false;
-			renderer.draw(0);
+			renderer?.draw(0);
 		});
 
 		renderer.addEventListener('onSeek', (time) => {
 			handleSeek(time);
 		});
+	}
+
+	onMount(() => {
+		setupPlaybackAndRenderer();
+
+		return () => {};
 	});
 
 	function togglePlayback() {
-		if (isPlaying) playback.pause();
-		else playback.play();
-
+		isPlaying ? playback.pause() : playback.play();
 		isPlaying = !isPlaying;
 	}
 
 	function handleSeek(time: number) {
-		const safe = Math.max(0, Math.min(time, audioData.duration));
-		playback.seek(safe);
-		currentTime = safe;
-		renderer.draw(safe);
+		const safeTime = Math.max(0, Math.min(time, audioData.duration));
+		playback.seek(safeTime);
+		currentTime = safeTime;
+		renderer?.draw(safeTime);
 	}
 
-	const handleFormEnhance: SubmitFunction = async ({ formData, cancel }) => {
+	const handleFormEnhance: SubmitFunction = ({ formData, cancel }) => {
 		if (!audioData) {
-			alert('No recording available to upload!');
+			console.error('No recording available to upload!');
 			cancel();
 			return;
 		}
@@ -93,21 +90,16 @@
 		formData.set('name', fileName);
 
 		isUploading = true;
-		await sleep(3000);
 
 		return async ({ result, update }) => {
 			isUploading = false;
 			await update();
+
 			if (result.type === 'success') {
 				onSaveSuccess();
 			} else if (result.type === 'failure') {
-				if (result.data && 'formError' in result.data) {
-					//TODO show toast
-					const errorMessage = result.data.formError;
-					onSaveError(errorMessage);
-				} else {
-					onSaveError('Some error occurred');
-				}
+				const errorMessage = result.data?.message || 'An unexpected error occurred.';
+				onSaveError(errorMessage);
 			}
 		};
 	};
@@ -123,23 +115,21 @@
 			type="text"
 			bind:value={fileName}
 			placeholder="Recording Name"
-			class={form?.fieldErrors?.name ? 'border-destructive' : ''}
+			class={form?.errors?.name ? 'border-destructive' : ''}
 		/>
 
-		{#if form?.fieldErrors?.name}
+		{#if form?.errors?.name}
 			<div class="mt-1 text-sm text-destructive">
-				{form.fieldErrors.name}
+				{form.errors.name[0]}
 			</div>
 		{/if}
 	</div>
 
-	<!-- Full waveform -->
 	<div class="mb-8 w-full max-w-4xl">
-		<div class=" relative h-64 w-full border">
+		<div class="relative h-64 w-full border">
 			<canvas bind:this={canvasEl} class="block h-full w-full"></canvas>
 		</div>
 
-		<!-- Timeline -->
 		<div class="mt-2 flex justify-between text-sm text-muted-foreground">
 			<span>{formatDuration(currentTime)}</span>
 			<span>{formatDuration(audioData.duration)}</span>
@@ -149,7 +139,9 @@
 			<div
 				class="inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-medium text-foreground"
 			>
-				<div class="h-2 w-2 animate-pulse rounded-full bg-primary"></div>
+				{#if isPlaying}
+					<div class="h-2 w-2 animate-pulse rounded-full bg-primary"></div>
+				{/if}
 				<span>
 					{formatDuration(currentTime)} / {formatDuration(audioData.duration)}
 				</span>
@@ -157,14 +149,13 @@
 		</div>
 	</div>
 
-	<!-- Controls -->
 	<div class="flex items-center gap-4">
 		<Button
 			variant="secondary"
 			size="icon"
 			class="size-12 rounded-full"
 			onclick={togglePlayback}
-			disabled={!audioData?.url}
+			disabled={!audioData?.file}
 		>
 			{#if isPlaying}
 				<Pause class="size-6 fill-current" />
@@ -185,11 +176,14 @@
 				class="rounded-full px-8"
 				disabled={!audioData || isUploading}
 			>
-				{#if isUploading}
-					<Spinner class="size-4" />
-				{/if}
-
-				Save
+				<span class="flex items-center gap-2">
+					{#if isUploading}
+						<Spinner class="size-4" />
+						Saving...
+					{:else}
+						Save
+					{/if}
+				</span>
 			</Button>
 		</form>
 	</div>
