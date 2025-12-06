@@ -1,5 +1,5 @@
 import { EventEmitter } from '$lib/EventEmitter';
-import type { AudioData } from '../../routes/app/types';
+import type { AudioData } from '$lib/types';
 
 export type AudioRecorderEventMap = {
 	start: () => void;

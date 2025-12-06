@@ -151,7 +151,7 @@
 	</div>
 {/snippet}
 
-<aside class="flex h-full w-64 flex-col border-r bg-muted/10">
+<aside class="flex h-full w-52 flex-col border-r bg-muted/10">
 	<div class="flex items-center justify-between px-4 py-4">
 		<div class="flex items-center gap-3">
 			<span class="text-lg font-semibold">VoiceNote</span>

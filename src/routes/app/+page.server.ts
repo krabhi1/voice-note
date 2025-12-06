@@ -1,7 +1,5 @@
-import { error, fail, json } from '@sveltejs/kit';
-import { z } from 'zod';
 import type { Actions, PageServerLoad } from './$types';
-import { validatePaginationParams } from '$lib/types/pagination';
+import { validatePaginationParams } from '../../lib/utils/pagination';
 
 export const load: PageServerLoad = async ({ params, depends, locals: { services, user }, url }) => {
 	const paginationParams = validatePaginationParams(

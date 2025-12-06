@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { X, Play, Pause } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
-	import type { AudioData } from '../types';
-	import { formatDuration } from '$lib/utils';
+	import type { AudioData } from '$lib/types';
+	import { formatDuration, sleep } from '$lib/utils';
 	import { type EditorWaveData } from '$lib/audio/EditorWaveEngine';
 	import { PlaybackEngine } from '$lib/audio/PlaybackEngine';
 	import { onMount } from 'svelte';
@@ -12,6 +12,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Card } from '$lib/components/ui/card';
+	import { Spinner } from '@/components/ui/spinner';
 
 	interface Props {
 		audioData: AudioData;
@@ -92,6 +93,7 @@
 		formData.set('name', fileName);
 
 		isUploading = true;
+		await sleep(3000);
 
 		return async ({ result, update }) => {
 			isUploading = false;
@@ -101,10 +103,10 @@
 			} else if (result.type === 'failure') {
 				if (result.data && 'formError' in result.data) {
 					//TODO show toast
-					const errorMessage = result.data.formError || 'Unknown error occurred';
+					const errorMessage = result.data.formError;
 					onSaveError(errorMessage);
 				} else {
-					onSaveError('Unknown error occurred');
+					onSaveError('Some error occurred');
 				}
 			}
 		};
@@ -183,7 +185,11 @@
 				class="rounded-full px-8"
 				disabled={!audioData || isUploading}
 			>
-				{isUploading ? 'Saving...' : 'Save'}
+				{#if isUploading}
+					<Spinner class="size-4" />
+				{/if}
+
+				Save
 			</Button>
 		</form>
 	</div>

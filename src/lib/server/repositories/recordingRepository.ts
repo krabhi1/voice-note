@@ -1,7 +1,7 @@
 import type { DrizzleClient } from '$lib/server/db';
 import { and, desc, eq, sql, count } from 'drizzle-orm';
 import * as schema from '$lib/server/db/schema';
-import type { PaginationParams } from '$lib/types/pagination';
+import type { PaginationParams } from '../../utils/pagination';
 import type { NewRecording } from '$lib/server/db/schema';
 export class RecordingRepository {
 	constructor(private db: DrizzleClient) {}

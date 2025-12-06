@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { AudioRecorder } from '$lib/audio/recorder';
 	import { formatDuration, sleep } from '$lib/utils';
-	import type { AudioData } from '../types';
+	import type { AudioData } from '$lib/types';
 
 	import RecordingView from './RecordingView.svelte';
 	import ProcessingView from './ProcessingView.svelte';
@@ -12,6 +12,7 @@
 	import { Mic } from '@lucide/svelte';
 	import type { PageProps } from './$types';
 	import { Button } from '@/components/ui/button';
+	import { toast } from 'svelte-sonner';
 
 	let { data, form }: PageProps = $props();
 
@@ -92,10 +93,12 @@
 	}
 
 	function handleSaveSuccess() {
+		toast.success('Recording saved successfully!');
 		gotoDashboard();
 	}
 
 	function handleSaveError(error: string) {
+		toast.error(`Error saving recording: ${error}`);
 		//TODO show error toast/notification here instead of just setting state
 		console.error('Save error:', error);
 	}
@@ -118,7 +121,6 @@
 			>
 				<Mic class="size-8" />
 			</Button>
-
 		</div>
 	{:else if isRecording}
 		<!-- Recording State -->

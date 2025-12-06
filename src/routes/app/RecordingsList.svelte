@@ -2,8 +2,6 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { type Recording } from '$lib/server/db/schema';
-	import type { PaginationMeta } from '$lib/types/pagination';
-	import { VALID_PAGE_SIZES, type ValidPageSize } from '$lib/types/pagination';
 	import * as Pagination from '$lib/components/ui/pagination/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Select from '$lib/components/ui/select/index.js';
@@ -11,6 +9,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Play, MoreHorizontal, StarIcon } from '@lucide/svelte';
 	import * as Table from '$lib/components/ui/table/index.js';
+	import { type PaginationMeta, type ValidPageSize, VALID_PAGE_SIZES } from '$lib/utils/pagination';
 
 	interface Props {
 		recordings: Recording[];
