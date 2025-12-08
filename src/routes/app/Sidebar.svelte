@@ -16,7 +16,7 @@
 	const isPending = $derived($session.isPending);
 	const path = $derived($page.url.pathname);
 
-	const fallbackInitials = $derived(() => {
+	const fallbackInitials = $derived.by(() => {
 		if (!user || !user.name) return '';
 
 		return user.name
@@ -151,7 +151,7 @@
 	</div>
 {/snippet}
 
-<aside class="flex h-full w-52 flex-col border-r bg-muted/10">
+<aside class="flex h-full w-60 flex-col border-r bg-muted/10">
 	<div class="flex items-center justify-between px-4 py-4">
 		<div class="flex items-center gap-3">
 			<span class="text-lg font-semibold">VoiceNote</span>
