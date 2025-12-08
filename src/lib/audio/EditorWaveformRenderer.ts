@@ -14,7 +14,7 @@ export class EditorWaveformRenderer extends EventEmitter<WaveformRenderEvents> {
 	duration: number;
 	private debouncedSeek: (time: number) => void;
 
-	 isDragging: boolean;
+	isDragging: boolean;
 	private onMouseMoveBound: (e: MouseEvent) => void;
 	private onMouseUpBound: (e: MouseEvent) => void;
 	private onTouchMoveBound: (e: TouchEvent) => void;
@@ -103,7 +103,7 @@ export class EditorWaveformRenderer extends EventEmitter<WaveformRenderEvents> {
 	private stopDrag() {
 		if (!this.isDragging) return;
 		this.isDragging = false;
-		this.draw(this.duration)
+		this.draw(this.duration);
 		window.removeEventListener('mousemove', this.onMouseMoveBound);
 		window.removeEventListener('mouseup', this.onMouseUpBound);
 		window.removeEventListener('touchmove', this.onTouchMoveBound);
@@ -127,11 +127,11 @@ export class EditorWaveformRenderer extends EventEmitter<WaveformRenderEvents> {
 		const barWidth = canvas.width / this.peaks.length;
 
 		// baseline
-		ctx.fillStyle = 'rgba(255, 255, 255, 0.10)';
+		ctx.fillStyle = 'rgba(100, 116, 139, 0.3)';
 		ctx.fillRect(0, Math.round(center), canvas.width, 1);
 
 		// waveform bars
-		ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+		ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
 		for (let i = 0; i < this.peaks.length; i++) {
 			const amp = this.peaks[i];
 			const barHeight = amp * center;
@@ -148,7 +148,7 @@ export class EditorWaveformRenderer extends EventEmitter<WaveformRenderEvents> {
 			const progressX = (currentTime / this.duration) * canvas.width;
 			const clampedX = Math.min(canvas.width - 1, Math.max(0, progressX));
 
-			ctx.fillStyle = '#ff0000';
+			ctx.fillStyle = '#3b82f6';
 			ctx.fillRect(Math.round(clampedX), 0, 1, canvas.height);
 		}
 	}

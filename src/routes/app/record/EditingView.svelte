@@ -126,7 +126,7 @@
 	</div>
 
 	<div class="mb-8 w-full max-w-4xl">
-		<div class="relative h-64 w-full border">
+		<div class="relative h-45 w-full ">
 			<canvas bind:this={canvasEl} class="block h-full w-full"></canvas>
 		</div>
 
