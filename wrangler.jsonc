@@ -20,7 +20,6 @@
 			"database_name": "voice-note",
 			"database_id": "333abbbd-cd7b-49b7-a527-dddfbc043f8d",
 			"migrations_dir": "drizzle",
-			"remote": true
 		}
 	]
 }
