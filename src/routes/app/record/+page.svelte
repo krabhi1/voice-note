@@ -28,7 +28,9 @@
 	const elapsedString = $derived.by(() => formatDuration(elapsedSeconds));
 	onMount(() => {
 		return () => {
-			recorder.stop();
+			recorder.destroy();
+			audioData = null;
+			waveData = null;
 		};
 	});
 	// Audio recorder event listeners
@@ -133,7 +135,6 @@
 		<EditingView
 			{audioData}
 			{waveData}
-			{elapsedSeconds}
 			onClose={handleCloseEditing}
 			onSaveSuccess={handleSaveSuccess}
 			onSaveError={handleSaveError}

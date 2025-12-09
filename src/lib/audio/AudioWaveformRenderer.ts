@@ -1,11 +1,11 @@
 import { EventEmitter } from '$lib/EventEmitter';
 import { debounce } from '$lib/utils';
 
-export type WaveformRenderEvents = {
+export type AudioWaveformRenderEvents = {
 	onSeek: (time: number) => void;
 };
 
-export class EditorWaveformRenderer extends EventEmitter<WaveformRenderEvents> {
+export class AudioWaveformRenderer extends EventEmitter<AudioWaveformRenderEvents> {
 	canvas: HTMLCanvasElement;
 	ctx: CanvasRenderingContext2D;
 	width: number;
@@ -174,5 +174,8 @@ export class EditorWaveformRenderer extends EventEmitter<WaveformRenderEvents> {
 		}
 
 		this.draw(0);
+	}
+	destroy() {
+		window.removeEventListener('resize', this.resize);
 	}
 }

@@ -100,4 +100,28 @@ export class PlaybackEngine extends EventEmitter<PlaybackEvents> {
 			this.rafId = null;
 		}
 	}
+	
+	destroy(): void {
+			// Stop playback and render loop
+			this.pause();
+
+			// Clean up blob URL if any
+			if (this.audio.src.startsWith('blob:')) {
+				URL.revokeObjectURL(this.audio.src);
+			}
+
+			// Remove all event listeners
+			this.audio.removeEventListener('ended', this.attachEvents);
+			this.audio.removeEventListener('error', this.attachEvents);
+
+			// Clear audio source and remove from DOM
+			this.audio.src = '';
+			this.audio.load();
+
+			// Clear any remaining animation frame
+			this.stopRenderLoop();
+
+			// Clear event emitter listeners
+			this.removeAllListeners();
+		}
 }

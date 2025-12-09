@@ -205,4 +205,9 @@ export class AudioRecorder extends EventEmitter<AudioRecorderEventMap> {
 			this._intervalRef = null;
 		}
 	}
+	async destroy() {
+		await this.stop();
+		if (this.lastUrl) URL.revokeObjectURL(this.lastUrl);
+		this.removeAllListeners();
+	}
 }

@@ -6,7 +6,7 @@
 	import type { EditorWaveData } from '$lib/audio/EditorWaveEngine';
 	import { PlaybackEngine } from '$lib/audio/PlaybackEngine';
 	import { onMount } from 'svelte';
-	import { EditorWaveformRenderer } from '$lib/audio/EditorWaveformRenderer';
+	import { AudioWaveformRenderer } from '$lib/audio/AudioWaveformRenderer';
 	import type { ActionData, SubmitFunction } from './$types';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -29,7 +29,7 @@
 	let fileName = $state('New Recording');
 
 	let canvasEl = $state<HTMLCanvasElement | null>(null);
-	let renderer: EditorWaveformRenderer | null = null;
+	let renderer: AudioWaveformRenderer | null = null;
 
 	const playback = new PlaybackEngine();
 	playback.load(audioData.file);
@@ -37,7 +37,7 @@
 	function setupPlaybackAndRenderer() {
 		if (!canvasEl || renderer) return;
 
-		renderer = new EditorWaveformRenderer(canvasEl);
+		renderer = new AudioWaveformRenderer(canvasEl);
 		renderer.setData(waveData.peaks, waveData.duration);
 
 		currentTime = 0;
@@ -60,10 +60,17 @@
 		});
 	}
 
+	function cleaup() {
+		renderer?.destroy();
+		playback.destroy();
+	}
+
 	onMount(() => {
 		setupPlaybackAndRenderer();
 
-		return () => {};
+		return () => {
+			cleaup();
+		};
 	});
 
 	function togglePlayback() {
@@ -126,7 +133,7 @@
 	</div>
 
 	<div class="mb-8 w-full max-w-4xl">
-		<div class="relative h-45 w-full ">
+		<div class="relative h-45 w-full">
 			<canvas bind:this={canvasEl} class="block h-full w-full"></canvas>
 		</div>
 
