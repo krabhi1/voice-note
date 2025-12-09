@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { onMount, onDestroy } from 'svelte';
 	import type { PageProps } from './$types';
 	import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Loader2 } from '@lucide/svelte';
+	import { toast } from 'svelte-sonner';
 
 	let { data }: PageProps = $props();
 
@@ -15,6 +17,26 @@
 
 	let isDragging = $state(false);
 	let isReady = $state(false);
+
+	let _onAudioError: (e: Event) => void;
+
+	onMount(() => {
+		if (audio) {
+			audio.volume = volume;
+
+			_onAudioError = (e: Event) => {
+				console.error('Audio element error event:', e, 'mediaError:', audio.error);
+				toast.error('Failed to load audio');
+			};
+			audio.addEventListener('error', _onAudioError);
+		}
+	});
+
+	onDestroy(() => {
+		if (audio && _onAudioError) {
+			audio.removeEventListener('error', _onAudioError);
+		}
+	});
 
 	function togglePlay() {
 		if (!audio || !isReady) return;

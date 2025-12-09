@@ -1,13 +1,12 @@
 export const GET = async ({ params, locals: { services } }) => {
-  console.log('Fetching audio with key:', params.key);
-	const object = await services.storageService.get(params.key);
-	if (!object) return new Response('Not found', { status: 404 });
+	console.log('Fetching audio with key:', params.key);
+	const signedUrl = await services.storageService.generatePresignedDownloadUrl(params.key, 60); // valid for 60 seconds
 
-	return new Response(object.body, {
+	return new Response(null, {
+		status: 303,
 		headers: {
-			'Content-Type': object.httpMetadata?.contentType ?? 'audio/webm',
-			'Accept-Ranges': 'bytes',
-			'Cache-Control': 'public, max-age=3600'
+			Location: signedUrl,
+			'Cache-Control': 'no-store' // prevent caching
 		}
 	});
 };
