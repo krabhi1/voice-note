@@ -8,7 +8,7 @@ A web app where users can record, store, and manage their voice recording online
 - Audio editor to trim, auto-delete silence, and enhance recordings.
 - Future plans for sharing voice notes with expiration links, and a trash system for recovery, auto create transcription of voice notes.
 ## Tech Stack
-- Fullstack: SvelteKit, Tailwind CSS, better-auth, bits-ui
+- Fullstack: SvelteKit, Tailwind CSS, better-auth, shadcn-svelte
 - Database: Cloudflare D1, Cloudflare R2
 - Deployment: Cloudflare Workers
 
