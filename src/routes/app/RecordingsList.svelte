@@ -60,16 +60,39 @@
 	function playRecording(recordingId: string) {
 		goto(`/app/${recordingId}`);
 	}
+
+	function downloadRecording(file_url?: string, title?: string) {
+		if (!file_url) {
+			toast.error('File URL is not available for download.');
+			return;
+		}
+		try {
+			const url = `/app/audio/${file_url}`;
+			const a = document.createElement('a');
+			a.href = url;
+
+			// REMOVE this line: a.target = '_blank';
+			a.rel = 'noopener noreferrer'; // Use noreferrer when removing _blank for security best practices
+
+			document.body.appendChild(a);
+			a.click();
+			a.remove();
+			toast.success('Download started');
+		} catch (err) {
+			console.error('Download failed', err);
+			toast.error('Failed to start download.');
+		}
+	}
 </script>
 
-<div class="bg-background p-4 h-screen flex flex-col">
-	<div class="mx-auto w-full  lg:max-w-4xl flex flex-col flex-1 min-h-0">
+<div class="flex h-screen flex-col bg-background p-4">
+	<div class="mx-auto flex min-h-0 w-full flex-1 flex-col lg:max-w-4xl">
 		<!-- Header -->
-		<h2 class="text-xl font-bold mb-6">Your Recordings</h2>
+		<h2 class="mb-6 text-xl font-bold">Your Recordings</h2>
 
 		{#if recordings?.length > 0}
 			<!-- Table Container with flex-1 and scroll -->
-			<div class="flex-1 overflow-auto mb-6">
+			<div class="mb-6 flex-1 overflow-auto">
 				{@render RecordingsTable({ recordings })}
 			</div>
 
@@ -148,7 +171,7 @@
 
 					<Table.Cell>
 						<div class="flex justify-end">
-							{@render MoreOptionsButton({ recordingId: recording.id })}
+							{@render MoreOptionsButton({ ...recording })}
 						</div>
 					</Table.Cell>
 				</Table.Row>
@@ -157,7 +180,7 @@
 	</Table.Root>
 {/snippet}
 
-{#snippet MoreOptionsButton({ recordingId }: { recordingId: string })}
+{#snippet MoreOptionsButton({ id, file_url, title }: Recording)}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger>
 			{#snippet child({ props })}
@@ -187,6 +210,7 @@
 
 			<DropdownMenu.Item
 				class="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm text-muted-foreground hover:bg-muted/10"
+				onclick={() => downloadRecording(file_url, title)}
 			>
 				<DownloadIcon class="h-4 w-4 text-muted-foreground" />
 				<span>Download</span>
@@ -197,7 +221,7 @@
 				method="POST"
 				action="?/deleteVoice"
 				use:enhance={(({ formData, cancel }) => {
-					formData.append('recordingId', recordingId);
+					formData.append('recordingId', id);
 					return async ({ result, update }) => {
 						await update();
 						if (result.type === 'success') {

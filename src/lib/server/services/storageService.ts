@@ -22,9 +22,20 @@ export class StorageService {
 
 	async uploadRecording(file: File, userId: string): Promise<string> {
 		const timestamp = Date.now();
-		const extension = file.name.split('.').pop();
-		const fileName = `${timestamp}-${nanoid()}.${extension}`;
-		const fileKey = `users/${userId}/audio/recordings/${fileName}`;
+		let extension = 'bin';
+		const mimePart = file.type.split('/')[1] || file.type;
+		const mimeMap: Record<string, string> = {
+			mpeg: 'mp3',
+			'x-wav': 'wav',
+			'vnd.wave': 'wav',
+			wav: 'wav',
+			webm: 'webm',
+			ogg: 'ogg',
+			oga: 'ogg',
+			flac: 'flac'
+		};
+		extension = (mimeMap[mimePart] ?? mimePart).toLowerCase();
+		const fileKey = `users/${userId}/audio/recordings/${nanoid()}/${file.name}.${extension}`;
 
 		const result = await this.bucket.put(fileKey, file, {
 			httpMetadata: { contentType: file.type },
@@ -53,7 +64,11 @@ export class StorageService {
 	async generatePresignedDownloadUrl(fileKey: string, expiresInSeconds = 60): Promise<string> {
 		return await getSignedUrl(
 			this.s3Client,
-			new GetObjectCommand({ Bucket: env.CLOUDFLARE_R2_BUCKET_NAME, Key: fileKey }),
+			new GetObjectCommand({
+				Bucket: env.CLOUDFLARE_R2_BUCKET_NAME,
+				Key: fileKey,
+				ResponseContentDisposition: `attachment; filename="${fileKey.split('/').pop()}"`
+			}),
 			{ expiresIn: expiresInSeconds }
 		);
 	}
