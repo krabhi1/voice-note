@@ -144,21 +144,19 @@
 				</div>
 
 				<div
-					class="rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-lg hover:-translate-y-1"
+					class="rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-lg hover:-translate-y-1 relative"
 				>
+					<span
+						class="absolute top-3 right-3 inline-flex items-center rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800"
+					>
+						Coming soon
+					</span>
 					<div
 						class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100 text-slate-700"
 					>
 						<Scissors class="h-6 w-6" />
 					</div>
-					<div class="mb-2">
-						<h3 class="text-lg font-semibold text-black">Auto Silence & Trim</h3>
-						<span
-							class="mt-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800"
-						>
-							Coming soon
-						</span>
-					</div>
+					<h3 class="text-lg font-semibold text-black mb-2">Auto Silence & Trim</h3>
 					<p class="text-slate-600">
 						Automatically remove silent gaps and trim recordings for a cleaner, ready-to-share note.
 					</p>
