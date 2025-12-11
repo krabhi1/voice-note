@@ -1,36 +1,58 @@
 # VoiceNote
 
-A web app where users can record, store, and manage their voice recording online.
-## Features
-- Record voice notes directly from the browser.
-- Store and organize recordings in a user-friendly interface.
-- Play back recordings with an integrated audio player.
-- Audio editor to trim, auto-delete silence, and enhance recordings.
-- Future plans for sharing voice notes with expiration links, and a trash system for recovery, auto create transcription of voice notes.
-## Tech Stack
-- Fullstack: SvelteKit, Tailwind CSS, better-auth, shadcn-svelte
-- Database: Cloudflare D1, Cloudflare R2
-- Deployment: Cloudflare Workers
+A modern web application for recording, storing, and managing voice notes in the cloud with an intuitive interface and powerful editing capabilities.
 
-## Installation
+## ✨ Features
+
+### Current
+- **Recording** - Record voice notes directly from your browser
+- **Smart Organization** - Store and organize recordings with a clean, user-friendly interface
+- **Integrated Playback** - Play back recordings with a built-in audio player
+- **Audio Editor** - Trim recordings, auto-delete silence, and enhance audio quality
+
+### Planned
+- **Secure Sharing** - Share voice notes with expiration links
+- **Trash & Recovery** - Deleted notes recovery system
+- **Auto Transcription** - Automatic transcription of voice recordings
+
+## 🛠️ Tech Stack
+
+- **Frontend**: SvelteKit, Tailwind CSS, shadcn-svelte
+- **Authentication**: better-auth
+- **Database**: Cloudflare D1
+- **Storage**: Cloudflare R2
+- **Deployment**: Cloudflare Workers
+
+## 🚀 Getting Started
+
+### Development Setup
+
+1. **Environment Configuration**
+   ```bash
+   cp .env.example .env
+   # Fill in the required values in .env
+   ```
+
+2. **Install Dependencies & Run**
+   ```bash
+   pnpm install
+   pnpm db:migrate:local
+   pnpm dev
+   ```
+
+### Database Management
+
 ```bash
-#development setup
-
-#create .env file from .env.example and fill in the values
-cp .env.example .env
-pnpm install
-pnpm db:migrate:local
-pnpm dev
-
-#when schema changes
-#create migrations
+# Create new migrations (after schema changes)
 pnpm db:generate
-#run migrations
+
+# Apply migrations to local database
 pnpm db:migrate:local
 ```
 
-## Utils
+## 🔧 Development Utils
+
 ```bash
-#install new components 
+# Add new shadcn-svelte components
 pnpm dlx shadcn-svelte@latest add button
 ```
