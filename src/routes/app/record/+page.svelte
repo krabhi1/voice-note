@@ -3,10 +3,10 @@
 	import { AudioRecorder } from '$lib/audio/recorder';
 	import { formatDuration, sleep } from '$lib/utils';
 	import type { AudioData } from '$lib/types';
+	import RecordingView from '$lib/components/app/record/RecordingView.svelte';
+	import ProcessingView from '$lib/components/app/record/ProcessingView.svelte';
+	import EditingView from '$lib/components/app/record/EditingView.svelte';
 
-	import RecordingView from './RecordingView.svelte';
-	import ProcessingView from './ProcessingView.svelte';
-	import EditingView from './EditingView.svelte';
 	import { EditorWaveEngine, type EditorWaveData } from '$lib/audio/EditorWaveEngine';
 	import { onMount } from 'svelte';
 	import { Mic } from '@lucide/svelte';
@@ -14,7 +14,7 @@
 	import { Button } from '@/components/ui/button';
 	import { toast } from 'svelte-sonner';
 
-	let { data, form }: PageProps = $props();
+	let { data }: PageProps = $props();
 
 	const recorder = new AudioRecorder();
 	let isRecording = $state(false);
@@ -95,7 +95,7 @@
 	}
 
 	function handleSaveSuccess() {
-		toast.success('Recording saved successfully!');
+		toast.success('Recording saved successfully-!');
 		gotoDashboard();
 	}
 
@@ -138,7 +138,7 @@
 			onClose={handleCloseEditing}
 			onSaveSuccess={handleSaveSuccess}
 			onSaveError={handleSaveError}
-			{form}
+			form={data.uploadVoiceForm}
 		/>
 	{/if}
 </div>

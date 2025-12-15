@@ -1,16 +1,18 @@
 <script lang="ts">
 	import { X, Play, Pause } from '@lucide/svelte';
-	import { enhance } from '$app/forms';
 	import type { AudioData } from '$lib/types';
 	import { formatDuration } from '$lib/utils';
 	import type { EditorWaveData } from '$lib/audio/EditorWaveEngine';
 	import { PlaybackEngine } from '$lib/audio/PlaybackEngine';
 	import { onMount } from 'svelte';
 	import { AudioWaveformRenderer } from '$lib/audio/AudioWaveformRenderer';
-	import type { ActionData, SubmitFunction } from './$types';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Spinner } from '@/components/ui/spinner';
+	import { superForm } from 'sveltekit-superforms';
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
+	import { uploadSchema } from '@/schemas';
+	import { goto } from '$app/navigation';
 
 	interface Props {
 		audioData: AudioData;
@@ -18,12 +20,36 @@
 		onClose: () => void;
 		onSaveSuccess: () => void;
 		onSaveError: (error: string) => void;
-		form?: ActionData;
+		form: SuperValidated<Infer<typeof uploadSchema>>;
 	}
 
-	let { audioData, onClose, onSaveSuccess, onSaveError, waveData, form }: Props = $props();
+	let { audioData, onClose, onSaveSuccess, onSaveError, waveData, form: _form }: Props = $props();
 
-	let isUploading = $state(false);
+	const { errors, enhance, message, submitting } = superForm(_form, {
+		onSubmit: ({ formData, cancel }) => {
+			if (!audioData) {
+				console.error('No recording available to upload!');
+				cancel();
+				return;
+			}
+
+			// Client sets the file, duration (ms) and name before submit
+			formData.set('voice-note', audioData.file, fileName);
+			formData.set('duration', String(audioData.duration * 1000));
+			formData.set('name', fileName);
+		},
+		onResult: ({ result }) => {
+			if (result.type === 'failure') {
+				onSaveError($message?.text || 'Save failed');
+			}
+		},
+		onUpdated: ({ form }) => {
+			if (form.valid) {
+				onSaveSuccess();
+			}
+		}
+	});
+
 	let isPlaying = $state(false);
 	let currentTime = $state(0);
 	let fileName = $state('New Recording');
@@ -60,22 +86,28 @@
 		});
 	}
 
-	function cleaup() {
+	function cleanup() {
 		renderer?.destroy();
 		playback.destroy();
+		renderer = null;
 	}
 
 	onMount(() => {
 		setupPlaybackAndRenderer();
 
 		return () => {
-			cleaup();
+			cleanup();
 		};
 	});
 
 	function togglePlayback() {
-		isPlaying ? playback.pause() : playback.play();
-		isPlaying = !isPlaying;
+		if (isPlaying) {
+			playback.pause();
+			isPlaying = false;
+		} else {
+			playback.play();
+			isPlaying = true;
+		}
 	}
 
 	function handleSeek(time: number) {
@@ -84,32 +116,6 @@
 		currentTime = safeTime;
 		renderer?.draw(safeTime);
 	}
-
-	const handleFormEnhance: SubmitFunction = ({ formData, cancel }) => {
-		if (!audioData) {
-			console.error('No recording available to upload!');
-			cancel();
-			return;
-		}
-
-		formData.set('voice-note', audioData.file, fileName);
-		formData.set('duration', String(audioData.duration * 1000));
-		formData.set('name', fileName);
-
-		isUploading = true;
-
-		return async ({ result, update }) => {
-			isUploading = false;
-			await update();
-
-			if (result.type === 'success') {
-				onSaveSuccess();
-			} else if (result.type === 'failure') {
-				const errorMessage = result.data?.message || 'An unexpected error occurred.';
-				onSaveError(errorMessage);
-			}
-		};
-	};
 </script>
 
 <div class="relative flex min-h-screen flex-col items-center justify-center bg-background p-8">
@@ -122,12 +128,12 @@
 			type="text"
 			bind:value={fileName}
 			placeholder="Recording Name"
-			class={form?.errors?.name ? 'border-destructive' : ''}
+			class={$errors?.name ? 'border-destructive' : ''}
 		/>
 
-		{#if form?.errors?.name}
+		{#if $errors?.name}
 			<div class="mt-1 text-sm text-destructive">
-				{form.errors.name[0]}
+				{$errors?.name}
 			</div>
 		{/if}
 	</div>
@@ -171,20 +177,15 @@
 			{/if}
 		</Button>
 
-		<form
-			method="POST"
-			action="?/uploadVoice"
-			enctype="multipart/form-data"
-			use:enhance={handleFormEnhance}
-		>
+		<form method="POST" action="?/uploadVoice" enctype="multipart/form-data" use:enhance>
 			<Button
 				type="submit"
 				size="lg"
 				class="rounded-full px-8"
-				disabled={!audioData || isUploading}
+				disabled={!audioData || $submitting}
 			>
 				<span class="flex items-center gap-2">
-					{#if isUploading}
+					{#if $submitting}
 						<Spinner class="size-4" />
 						Saving...
 					{:else}

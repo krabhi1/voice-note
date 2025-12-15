@@ -1,31 +1,41 @@
 import { fail } from '@sveltejs/kit';
-import { z } from 'zod';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
+import { superValidate, message } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
+import { uploadSchema } from '@/schemas';
 
-const uploadSchema = z.object({
-	'voice-note': z
-		.instanceof(File, { message: 'A file is required.' })
-		.refine((file) => file.size > 0, 'File cannot be empty.'),
-	duration: z.coerce.number().positive('Duration must be positive.'),
-	name: z.string().min(1, 'Name is required.')
-});
+const schema = zod4(uploadSchema);
+
+export const load: PageServerLoad = async () => {
+	const uploadVoiceForm = await superValidate(schema);
+	return { uploadVoiceForm };
+};
 
 export const actions = {
 	uploadVoice: async ({ request, locals: { services, user } }) => {
-		const parsed = uploadSchema.safeParse(Object.fromEntries(await request.formData()));
-		if (!parsed.success) {
-			const fieldErrors = parsed.error.flatten().fieldErrors;
-			return fail(400, {
-				errors: fieldErrors,
-				message: 'Validation failed'
-			});
+		const form = await superValidate(request, schema);
+		console.log('Form data received:', form);
+
+		if (!form.valid) {
+			const sanitizedForm = {
+				...form,
+				data: {
+					...form.data,
+					['voice-note']: null
+				}
+			};
+			return fail(400, { form: sanitizedForm });
 		}
 
-		const { 'voice-note': file, duration, name } = parsed.data;
-		const result = await services.recordingService.createRecording(file, duration, user.id, name);
-		return {
-			success: true,
-			data: result
-		};
+		const { 'voice-note': voiceFile, duration, name } = form.data;
+
+		try {
+			await services.recordingService.createRecording(voiceFile, duration, user.id, name);
+		} catch (err) {
+			console.error('Failed to create recording:', err);
+			return fail(400, { message: 'Failed to upload voice note.' });
+		}
+
+		return message(form, 'Voice note uploaded');
 	}
 } satisfies Actions;
