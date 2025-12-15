@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Mic, LayoutGrid, EllipsisVerticalIcon, Plus, Folder, FileAudio } from '@lucide/svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Avatar from '$lib/components/ui/avatar';
@@ -14,7 +14,7 @@
 	const user = $derived($session.data?.user);
 
 	const isPending = $derived($session.isPending);
-	const path = $derived($page.url.pathname);
+	const path = $derived(page.url.pathname);
 
 	const fallbackInitials = $derived.by(() => {
 		if (!user || !user.name) return '';

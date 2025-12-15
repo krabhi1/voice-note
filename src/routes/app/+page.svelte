@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import RecordingsList from './RecordingsList.svelte';
+	import RecordingsList from '$lib/components/app/RecordingsList.svelte';
 
 	let { data }: PageProps = $props();
 	
