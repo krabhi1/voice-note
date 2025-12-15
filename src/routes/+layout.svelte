@@ -1,6 +1,5 @@
 <script lang="ts">
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { Toaster } from '@/components/ui/sonner';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 
@@ -8,7 +7,8 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<title>VoiceNote</title>
+	<meta name="description" content="VoiceNote - Your personal voice note-taking app" />
 </svelte:head>
 <Toaster />
 <Tooltip.Provider>
