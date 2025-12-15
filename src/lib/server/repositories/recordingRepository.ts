@@ -48,6 +48,15 @@ export class RecordingRepository {
 		});
 	}
 
+	async update(id: string, data: Partial<NewRecording>) {
+		return await this.db
+			.update(schema.recording)
+			.set(data)
+			.where(eq(schema.recording.id, id))
+			.returning()
+			.get();
+	}
+
 	async deleteById(id: string) {
 		return await this.db
 			.delete(schema.recording)

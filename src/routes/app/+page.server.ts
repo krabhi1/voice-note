@@ -1,13 +1,13 @@
 import type { Actions, PageServerLoad } from './$types';
-import { validatePaginationParams } from '../../lib/utils/pagination';
-import { z } from 'zod';
-import { fail, isActionFailure, isHttpError } from '@sveltejs/kit';
-export const load: PageServerLoad = async ({
-	params,
-	depends,
-	locals: { services, user },
-	url
-}) => {
+import { validatePaginationParams } from '$lib/utils/pagination';
+import { zod4 } from 'sveltekit-superforms/adapters';
+
+import { fail } from '@sveltejs/kit';
+import { renameSchema, deleteSchema } from '@/schemas';
+import { superValidate, message } from 'sveltekit-superforms';
+import { handleError } from '@/server/utils';
+
+export const load: PageServerLoad = async ({ locals: { services, user }, url }) => {
 	const paginationParams = validatePaginationParams(
 		url.searchParams.get('page'),
 		url.searchParams.get('size')
@@ -24,35 +24,33 @@ export const load: PageServerLoad = async ({
 	};
 };
 
-const deleteSchema = z.object({
-	recordingId: z.string().min(1, 'Recording ID is required.')
-});
-
 export const actions = {
-	deleteVoice: async ({ request, locals: { services, user } }) => {
-		const parsed = deleteSchema.safeParse(Object.fromEntries(await request.formData()));
-		if (!parsed.success) {
-			const fieldErrors = parsed.error.flatten().fieldErrors;
-			return fail(400, {
-				errors: fieldErrors,
-				message: 'Validation failed'
-			});
+	renameVoice: async ({ request, locals: { services, user } }) => {
+		const form = await superValidate(request, zod4(renameSchema));
+		if (!form.valid) {
+			return message(form, 'Invalid input');
 		}
-		const { recordingId } = parsed.data;
+
+		const { id, title } = form.data;
 		try {
-			await services.recordingService.deleteRecording(recordingId, user.id);
-			return {
-				success: true
-			};
+			await services.recordingService.renameRecording(id, user.id, title);
 		} catch (error) {
-			console.error(error);
-			if (isActionFailure(error)) {
-				return error;
-			} else {
-				return fail(500, {
-					message: 'Internal Server Error'
-				});
-			}
+			return handleError(error);
 		}
+		return message(form, 'Voice note renamed');
+	},
+	deleteVoice: async ({ request, locals: { services, user } }) => {
+		const form = await superValidate(request, zod4(deleteSchema));
+		if (!form.valid) {
+			return message(form, 'Invalid input');
+		}
+
+		const { id } = form.data;
+		try {
+			await services.recordingService.deleteRecording(id, user.id);
+		} catch (error) {
+			return handleError(error);
+		}
+		return message(form, 'Voice note deleted');
 	}
 } satisfies Actions;

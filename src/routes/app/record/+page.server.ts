@@ -1,41 +1,29 @@
-import { fail } from '@sveltejs/kit';
+import { fail, isActionFailure } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { uploadSchema } from '@/schemas';
-
-const schema = zod4(uploadSchema);
+import { handleError } from '@/server/utils';
 
 export const load: PageServerLoad = async () => {
-	const uploadVoiceForm = await superValidate(schema);
+	const uploadVoiceForm = await superValidate(zod4(uploadSchema));
 	return { uploadVoiceForm };
 };
 
 export const actions = {
 	uploadVoice: async ({ request, locals: { services, user } }) => {
-		const form = await superValidate(request, schema);
-		console.log('Form data received:', form);
-
+		const form = await superValidate(request, zod4(uploadSchema));
 		if (!form.valid) {
-			const sanitizedForm = {
-				...form,
-				data: {
-					...form.data,
-					['voice-note']: null
-				}
-			};
-			return fail(400, { form: sanitizedForm });
+			return message(form, 'Invalid input');
 		}
 
 		const { 'voice-note': voiceFile, duration, name } = form.data;
 
 		try {
 			await services.recordingService.createRecording(voiceFile, duration, user.id, name);
-		} catch (err) {
-			console.error('Failed to create recording:', err);
-			return fail(400, { message: 'Failed to upload voice note.' });
+		} catch (error) {
+			return handleError(error);
 		}
-
 		return message(form, 'Voice note uploaded');
 	}
 } satisfies Actions;

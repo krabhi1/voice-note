@@ -70,6 +70,14 @@ export class RecordingService {
     );
     return recording;
   }
+  async renameRecording(recordId: string, userId: string, newTitle: string) {
+    const recording = await this.getRecordingByIdAndUser(recordId, userId);
+    if (!recording) {
+      throw fail(404, { message: 'Recording not found' });
+    }
+    return await this.recordingRepository.update(recordId, { title: newTitle });
+  }
+
   async deleteRecording(recordId: string, userId: string) {
     const recording = await this.getRecordingByIdAndUser(recordId, userId);
     if (!recording) {
