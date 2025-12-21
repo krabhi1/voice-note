@@ -1,167 +1,219 @@
 <script lang="ts">
 	import { useSession } from '$lib/auth-client';
-	import voiceNoteDemo from '$lib/assets/voice-note-demo.mp4';
-	import videoPoster from '$lib/assets/voice-note-video-poster.png';
 	import Button from '@/components/ui/button/button.svelte';
-	import { ArrowRight, Mic, Scissors, Cloud, LayoutGrid } from '@lucide/svelte';
+	import { ArrowRight, Mic, List, Search, Play, Shield, Zap } from '@lucide/svelte';
 
 	const session = useSession();
 </script>
 
-<section class="min-h-screen bg-white text-black selection:bg-black selection:text-white">
-	<!-- Header -->
-	<header
-		class="fixed top-0 right-0 left-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-md"
-	>
-		<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-			<a href="/" class="flex items-center gap-2 text-lg font-bold tracking-tight text-black">
-				<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">
+<div class="min-h-screen bg-white font-sans text-zinc-900 antialiased selection:bg-zinc-900 selection:text-white">
+	<!-- Navigation -->
+	<nav class="border-b border-zinc-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+		<div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+			<div class="flex items-center gap-2">
+				<div class="flex h-7 w-7 items-center justify-center rounded bg-black text-white">
 					<Mic class="h-4 w-4" />
 				</div>
-				VoiceNote
-			</a>
+				<span class="text-sm font-bold tracking-tight uppercase">VoiceNote</span>
+			</div>
 
-			{#if !$session.isPending}
-				{#if $session?.data}
-					<a href="/app">
-						<Button variant="default" class="bg-black hover:bg-black/90">Dashboard</Button>
-					</a>
-				{:else}
-					<a
-						href="/login"
-						class="rounded-lg bg-black px-6 py-2 text-sm font-medium text-white transition hover:bg-black/90 hover:shadow-lg"
-					>
-						Get Started
-					</a>
+			<div class="flex items-center gap-4">
+				{#if !$session.isPending}
+					{#if $session?.data}
+						<a href="/app">
+							<Button variant="outline" size="sm" class="rounded-none border-black hover:bg-black hover:text-white transition-colors">
+								Dashboard
+							</Button>
+						</a>
+					{:else}
+						<a href="/login" class="text-xs font-bold uppercase tracking-widest hover:text-zinc-500 transition-colors">
+							Sign In
+						</a>
+						<a href="/login">
+							<Button size="sm" class="rounded-none bg-black text-white hover:bg-zinc-800">
+								Get Started
+							</Button>
+						</a>
+					{/if}
 				{/if}
-			{/if}
+			</div>
 		</div>
-	</header>
+	</nav>
 
-	<!-- Hero Section -->
-	<div class="relative overflow-hidden pt-24 pb-16 lg:pt-32 lg:pb-24">
-		<div
-			class="absolute top-0 left-1/2 -z-10 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-gradient-to-r from-slate-50 to-blue-50 opacity-50 blur-3xl"
-		></div>
+	<main>
+		<!-- Hero Section -->
+		<section class="px-4 pt-20 pb-16 sm:px-6 lg:pt-32 lg:pb-24">
+			<div class="mx-auto max-w-3xl text-center">
+				<div class="inline-block mb-8 px-3 py-1 border border-zinc-200 rounded-none">
+					<span class="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Utility-First Voice Recording</span>
+				</div>
+				<h1 class="text-4xl font-bold tracking-tighter text-black sm:text-6xl lg:text-7xl">
+					Capture thoughts at the speed of sound.
+				</h1>
+				<p class="mx-auto mt-8 max-w-xl text-lg text-zinc-500 leading-relaxed">
+					A minimalist workspace for your voice. Record, organize, and archive your ideas without the friction of traditional note-taking.
+				</p>
+				<div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+					{#if $session?.data}
+						<a href="/app">
+							<Button size="lg" class="h-12 rounded-none bg-black px-8 text-sm font-bold uppercase tracking-widest hover:bg-zinc-800">
+								Go to Dashboard
+							</Button>
+						</a>
+					{:else}
+						<a href="/login">
+							<Button size="lg" class="h-12 rounded-none bg-black px-8 text-sm font-bold uppercase tracking-widest hover:bg-zinc-800">
+								Start Recording
+								<ArrowRight class="ml-2 h-4 w-4" />
+							</Button>
+						</a>
+					{/if}
+				</div>
+			</div>
+		</section>
 
-		<div class="mx-auto max-w-4xl px-6 text-center">
-			<h1 class="text-4xl font-bold tracking-tight text-black sm:text-5xl lg:text-6xl">
-				The cleanest way to record and organize voice notes.
-			</h1>
+		<!-- UI Mockup Section -->
+		<section class="px-4 pb-24 sm:px-6">
+			<div class="mx-auto max-w-5xl">
+				<div class="relative rounded-none border border-zinc-200 bg-zinc-50 p-2 shadow-2xl shadow-zinc-200/30">
+					<!-- Mockup Header -->
+					<div class="flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3">
+						<div class="flex gap-1.5">
+							<div class="h-2 w-2 rounded-full bg-zinc-200"></div>
+							<div class="h-2 w-2 rounded-full bg-zinc-200"></div>
+							<div class="h-2 w-2 rounded-full bg-zinc-200"></div>
+						</div>
+						<div class="flex items-center gap-2 rounded-none border border-zinc-100 bg-zinc-50 px-3 py-1">
+							<Search class="h-3 w-3 text-zinc-400" />
+							<div class="h-2 w-24 rounded-full bg-zinc-200"></div>
+						</div>
+						<div class="w-12"></div>
+					</div>
+					
+					<!-- Mockup Content -->
+					<div class="flex h-[400px] bg-white">
+						<!-- Sidebar -->
+						<div class="hidden w-48 border-r border-zinc-100 p-4 sm:block">
+							<div class="space-y-4">
+								{#each Array(5) as _, i}
+									<div class="flex items-center gap-2">
+										<div class="h-2 w-2 rounded-none {i === 0 ? 'bg-black' : 'bg-zinc-100'}"></div>
+										<div class="h-1.5 w-20 rounded-none {i === 0 ? 'bg-black' : 'bg-zinc-100'}"></div>
+									</div>
+								{/each}
+							</div>
+						</div>
+						
+						<!-- Main Area -->
+						<div class="flex-1 p-6">
+							<div class="mb-8 flex items-center justify-between">
+								<div class="h-4 w-32 bg-zinc-100"></div>
+								<div class="flex items-center gap-3">
+									<div class="text-[10px] font-bold uppercase tracking-widest text-red-500 animate-pulse">Recording</div>
+									<div class="h-8 w-8 rounded-full bg-black flex items-center justify-center">
+										<div class="h-2 w-2 rounded-full bg-red-500"></div>
+									</div>
+								</div>
+							</div>
+							
+							<div class="space-y-3">
+								{#each [1, 0.7, 0.9, 0.5] as width, i}
+									<div class="group flex items-center justify-between border border-zinc-100 p-4 transition-colors hover:bg-zinc-50">
+										<div class="flex items-center gap-4">
+											<div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-50 border border-zinc-100">
+												<Play class="h-3 w-3 text-zinc-400" />
+											</div>
+											<div class="space-y-2">
+												<div class="h-2 bg-zinc-200" style="width: {width * 180}px"></div>
+												<div class="h-1.5 w-24 bg-zinc-100"></div>
+											</div>
+										</div>
+										<div class="text-[10px] font-mono text-zinc-400">0:{12 + i}</div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
 
-			<p class="mx-auto mt-6 max-w-2xl text-xl text-slate-600 leading-relaxed">
-				Fast recording. Instant saving. Zero clutter.
-			</p>
+		<!-- Features Grid -->
+		<section class="border-t border-zinc-100 bg-zinc-50/30 py-24">
+			<div class="mx-auto max-w-6xl px-4 sm:px-6">
+				<div class="grid grid-cols-1 md:grid-cols-3 border-l border-t border-zinc-200">
+					<div class="border-r border-b border-zinc-200 p-10 transition-colors hover:bg-white">
+						<div class="mb-8 text-black">
+							<Zap class="h-5 w-5" />
+						</div>
+						<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-black">Instant Capture</h3>
+						<p class="mt-4 text-sm leading-relaxed text-zinc-500">
+							Zero-latency recording. Your thoughts are saved the moment you stop speaking. No loading screens, no friction.
+						</p>
+					</div>
+					<div class="border-r border-b border-zinc-200 p-10 transition-colors hover:bg-white">
+						<div class="mb-8 text-black">
+							<List class="h-5 w-5" />
+						</div>
+						<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-black">Clean Organization</h3>
+						<p class="mt-4 text-sm leading-relaxed text-zinc-500">
+							Automatic timestamping and simple tagging. Find what you need in seconds with our high-performance search.
+						</p>
+					</div>
+					<div class="border-r border-b border-zinc-200 p-10 transition-colors hover:bg-white">
+						<div class="mb-8 text-black">
+							<Shield class="h-5 w-5" />
+						</div>
+						<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-black">Private by Default</h3>
+						<p class="mt-4 text-sm leading-relaxed text-zinc-500">
+							Your recordings are yours. We use industry-standard encryption to ensure your data remains private and secure.
+						</p>
+					</div>
+				</div>
+			</div>
+		</section>
 
-			<div class="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-				{#if !$session?.data}
+		<!-- Final CTA -->
+		<section class="py-32 px-4 sm:px-6">
+			<div class="mx-auto max-w-3xl text-center">
+				<h2 class="text-3xl font-bold tracking-tight text-black">Ready to clear your mind?</h2>
+				<p class="mt-4 text-zinc-500">Join others using VoiceNote to organize their daily thoughts.</p>
+				<div class="mt-10">
 					<a href="/login">
-						<Button
-							size="lg"
-							class="h-14 rounded-lg bg-black px-8 text-base font-medium hover:bg-black/90 hover:shadow-xl transition-all"
-						>
-							Start Recording
-							<ArrowRight class="ml-2 h-5 w-5" />
+						<Button size="lg" class="h-12 rounded-none bg-black px-10 text-sm font-bold uppercase tracking-widest hover:bg-zinc-800">
+							Get Started for Free
 						</Button>
 					</a>
-				{:else}
-					<a href="/app">
-						<Button size="lg" class="h-14 rounded-lg bg-black px-8 text-base font-medium hover:bg-black/90">
-							Go to Dashboard
-						</Button>
-					</a>
-				{/if}
+				</div>
 			</div>
+		</section>
+	</main>
 
-			<div class="mt-6 text-sm text-slate-500">Free tier available. No credit card needed.</div>
-		</div>
-	</div>
-
-	<!-- Demo -->
-	<div class="mx-auto max-w-5xl px-6 pb-16">
-		<div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 shadow-xl">
-			<div class="aspect-video overflow-hidden rounded-lg bg-white shadow-inner">
-				<video
-					class="h-full w-full object-cover"
-					src={voiceNoteDemo}
-					controls
-					playsinline
-					poster={videoPoster}
-				>
-					<track kind="captions" src="" label="Demo captions" default />
-				</video>
+	<!-- Footer -->
+	<footer class="border-t border-zinc-100 py-16">
+		<div class="mx-auto max-w-6xl px-4 sm:px-6">
+			<div class="flex flex-col items-center justify-between gap-10 sm:flex-row">
+				<div class="flex items-center gap-2 opacity-40 grayscale">
+					<div class="flex h-5 w-5 items-center justify-center rounded-none bg-black text-white">
+						<Mic class="h-3 w-3" />
+					</div>
+					<span class="text-[10px] font-bold uppercase tracking-widest">VoiceNote</span>
+				</div>
+				<div class="flex gap-10">
+					<a href="#" class="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-black transition-colors">Privacy</a>
+					<a href="#" class="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-black transition-colors">Terms</a>
+					<a href="#" class="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-black transition-colors">Contact</a>
+				</div>
+				<p class="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+					&copy; {new Date().getFullYear()} VoiceNote
+				</p>
 			</div>
 		</div>
-	</div>
+	</footer>
+</div>
 
-	<!-- Simple Features -->
-	<div class="bg-slate-50/50 py-20">
-		<div class="mx-auto max-w-7xl px-6">
-			<div class="mb-16 text-center">
-				<h2 class="text-3xl font-bold tracking-tight text-black sm:text-4xl">
-					Built for fast thinking and clean organization.
-				</h2>
-				<p class="mt-4 text-lg text-slate-600">Everything you need to capture and organize your thoughts.</p>
-			</div>
-
-			<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-				<div
-					class="rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-lg hover:-translate-y-1"
-				>
-					<div
-						class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100 text-slate-700"
-					>
-						<Mic class="h-6 w-6" />
-					</div>
-					<h3 class="text-lg font-semibold text-black mb-2">Instant Recording</h3>
-					<p class="text-slate-600">Record in one click. Works directly in your browser.</p>
-				</div>
-
-				<div
-					class="rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-lg hover:-translate-y-1"
-				>
-					<div
-						class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100 text-slate-700"
-					>
-						<LayoutGrid class="h-6 w-6" />
-					</div>
-					<h3 class="text-lg font-semibold text-black mb-2">Organized Library</h3>
-					<p class="text-slate-600">Rename, tag, and search recordings instantly.</p>
-				</div>
-
-				<div
-					class="rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-lg hover:-translate-y-1"
-				>
-					<div
-						class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100 text-slate-700"
-					>
-						<Cloud class="h-6 w-6" />
-					</div>
-					<h3 class="text-lg font-semibold text-black mb-2">Secure Cloud Backup</h3>
-					<p class="text-slate-600">
-						Your recordings are stored safely and accessible anywhere.
-					</p>
-				</div>
-
-				<div
-					class="rounded-xl border border-slate-200 bg-white p-6 transition-all hover:shadow-lg hover:-translate-y-1 relative"
-				>
-					<span
-						class="absolute top-3 right-3 inline-flex items-center rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800"
-					>
-						Coming soon
-					</span>
-					<div
-						class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100 text-slate-700"
-					>
-						<Scissors class="h-6 w-6" />
-					</div>
-					<h3 class="text-lg font-semibold text-black mb-2">Auto Silence & Trim</h3>
-					<p class="text-slate-600">
-						Automatically remove silent gaps and trim recordings for a cleaner, ready-to-share note.
-					</p>
-				</div>
-			</div>
-		</div>
-	</div>
-</section>
+<style>
+	:global(body) {
+		background-color: white;
+	}
+</style>
