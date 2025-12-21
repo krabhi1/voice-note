@@ -7,6 +7,7 @@
 	import { onMount } from 'svelte';
 	import { AudioWaveformRenderer } from '$lib/audio/AudioWaveformRenderer';
 	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Spinner } from '@/components/ui/spinner';
 	import { superForm } from 'sveltekit-superforms';
@@ -53,6 +54,7 @@
 	let isPlaying = $state(false);
 	let currentTime = $state(0);
 	let fileName = $state('New Recording');
+	let showUnsavedDialog = $state(false);
 
 	let canvasEl = $state<HTMLCanvasElement | null>(null);
 	let renderer: AudioWaveformRenderer | null = null;
@@ -119,7 +121,12 @@
 </script>
 
 <div class="relative flex min-h-screen flex-col items-center justify-center bg-background p-8">
-	<Button variant="ghost" size="icon" onclick={onClose} class="absolute top-4 right-4">
+	<Button
+		variant="ghost"
+		size="icon"
+		onclick={() => (showUnsavedDialog = true)}
+		class="absolute top-4 right-4"
+	>
 		<X class="size-6" />
 	</Button>
 
@@ -196,3 +203,19 @@
 		</form>
 	</div>
 </div>
+
+<Dialog.Root bind:open={showUnsavedDialog}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Unsaved Recording</Dialog.Title>
+			<Dialog.Description>
+				You have an unsaved recording. Are you sure you want to discard it? This action cannot be
+				undone.
+			</Dialog.Description>
+		</Dialog.Header>
+		<Dialog.Footer>
+			<Button variant="outline" onclick={() => (showUnsavedDialog = false)}>Cancel</Button>
+			<Button variant="destructive" onclick={onClose}>Discard</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
