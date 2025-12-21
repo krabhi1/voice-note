@@ -2,10 +2,8 @@
 	import { X, Play, Pause, Save, Mic, Clock, FileText } from '@lucide/svelte';
 	import type { AudioData } from '$lib/types';
 	import { formatDuration } from '$lib/utils';
-	import type { EditorWaveData } from '$lib/audio/EditorWaveEngine';
-	import { PlaybackEngine } from '$lib/audio/PlaybackEngine';
 	import { onMount } from 'svelte';
-	import { AudioWaveformRenderer } from '$lib/audio/AudioWaveformRenderer';
+	import WaveSurfer from 'wavesurfer.js';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Spinner } from '@/components/ui/spinner';
@@ -15,14 +13,14 @@
 
 	interface Props {
 		audioData: AudioData;
-		waveData: EditorWaveData;
+		waveData?: any; // Kept for compatibility but unused
 		onClose: () => void;
 		onSaveSuccess: () => void;
 		onSaveError: (error: string) => void;
 		form: SuperValidated<Infer<typeof uploadSchema>>;
 	}
 
-	let { audioData, onClose, onSaveSuccess, onSaveError, waveData, form: _form }: Props = $props();
+	let { audioData, onClose, onSaveSuccess, onSaveError, form: _form }: Props = $props();
 
 	const { errors, enhance, message, submitting } = superForm(_form, {
 		onSubmit: ({ formData, cancel }) => {
@@ -53,67 +51,52 @@
 	let fileName = $state('New Recording');
 	let showUnsavedDialog = $state(false);
 
-	let canvasEl = $state<HTMLCanvasElement | null>(null);
-	let renderer: AudioWaveformRenderer | null = null;
-
-	const playback = new PlaybackEngine();
-	playback.load(audioData.file);
-
-	function setupPlaybackAndRenderer() {
-		if (!canvasEl || renderer) return;
-
-		renderer = new AudioWaveformRenderer(canvasEl);
-		renderer.setData(waveData.peaks, waveData.duration);
-
-		currentTime = 0;
-
-		playback.addEventListener('progress', (time) => {
-			currentTime = time;
-			if (renderer && !renderer.isDragging) {
-				renderer.draw(time);
-			}
-		});
-
-		playback.addEventListener('end', () => {
-			currentTime = 0;
-			isPlaying = false;
-			renderer?.draw(0);
-		});
-
-		renderer.addEventListener('onSeek', (time) => {
-			handleSeek(time);
-		});
-	}
-
-	function cleanup() {
-		renderer?.destroy();
-		playback.destroy();
-		renderer = null;
-	}
+	let container = $state<HTMLDivElement | null>(null);
+	let wavesurfer: WaveSurfer;
 
 	onMount(() => {
-		setupPlaybackAndRenderer();
+		if (container && audioData?.file) {
+			const url = URL.createObjectURL(audioData.file);
+			wavesurfer = WaveSurfer.create({
+				container,
+				waveColor: 'rgb(161, 161, 170)', // neutral-400
+				progressColor: 'rgb(124, 58, 237)', // violet-600
+				cursorColor: 'rgb(124, 58, 237)',
+				barWidth: 2,
+				barGap: 3,
+				barRadius: 3,
+				height: 192, // h-48
+				normalize: true,
+				url: url
+			});
 
-		return () => {
-			cleanup();
-		};
+			wavesurfer.on('audioprocess', (time) => {
+				currentTime = time;
+			});
+
+			wavesurfer.on('interaction', () => {
+				currentTime = wavesurfer.getCurrentTime();
+			});
+
+			wavesurfer.on('play', () => (isPlaying = true));
+			wavesurfer.on('pause', () => (isPlaying = false));
+			wavesurfer.on('finish', () => {
+				isPlaying = false;
+				wavesurfer.seekTo(0);
+				currentTime = 0;
+			});
+
+			return () => {
+				wavesurfer.destroy();
+				URL.revokeObjectURL(url);
+			};
+		}
 	});
 
 	function togglePlayback() {
-		if (isPlaying) {
-			playback.pause();
-			isPlaying = false;
-		} else {
-			playback.play();
-			isPlaying = true;
+		if (wavesurfer) {
+			wavesurfer.playPause();
 		}
-	}
-
-	function handleSeek(time: number) {
-		const safeTime = Math.max(0, Math.min(time, audioData.duration));
-		playback.seek(safeTime);
-		currentTime = safeTime;
-		renderer?.draw(safeTime);
 	}
 </script>
 
@@ -195,8 +178,8 @@
 					</div>
 				</div>
 
-				<div class="relative h-48 w-full bg-background border border-muted/30">
-					<canvas bind:this={canvasEl} class="block h-full w-full cursor-pointer"></canvas>
+				<div class="relative h-48 w-full bg-background border border-muted/30 rounded-md overflow-hidden">
+					<div bind:this={container} class="h-full w-full cursor-pointer"></div>
 					
 					<!-- Decorative Grid -->
 					<div class="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 opacity-[0.02]">

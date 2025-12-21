@@ -1,14 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { AudioRecorder } from '$lib/audio/recorder';
-	import { formatDuration, sleep } from '$lib/utils';
+	import { sleep } from '$lib/utils';
 	import type { AudioData } from '$lib/types';
 	import RecordingView from '$lib/components/app/record/RecordingView.svelte';
 	import ProcessingView from '$lib/components/app/record/ProcessingView.svelte';
 	import EditingView from '$lib/components/app/record/EditingView.svelte';
 
-	import { EditorWaveEngine, type EditorWaveData } from '$lib/audio/EditorWaveEngine';
-	import { onMount } from 'svelte';
 	import { Mic } from '@lucide/svelte';
 	import type { PageProps } from './$types';
 	import { Button } from '@/components/ui/button';
@@ -16,78 +13,24 @@
 
 	let { data }: PageProps = $props();
 
-	const recorder = new AudioRecorder();
-	let isRecording = $state(false);
-	let isProcessing = $state(false);
-	let showEditingView = $state(false);
-	let elapsedSeconds = $state(0);
-	let isPaused = $state(false);
+	type Status = 'idle' | 'recording' | 'processing' | 'editing';
+
+	let status = $state<Status>('idle');
 	let audioData = $state<AudioData | null>(null);
-	let waveData = $state<EditorWaveData | null>(null);
 
-	const elapsedString = $derived.by(() => formatDuration(elapsedSeconds));
-	onMount(() => {
-		return () => {
-			recorder.destroy();
-			audioData = null;
-			waveData = null;
-		};
-	});
-	// Audio recorder event listeners
-	recorder.addEventListener('start', () => {
-		isRecording = true;
-		isProcessing = false;
-		showEditingView = false;
-		elapsedSeconds = 0;
-		audioData = null;
-	});
-
-	recorder.addEventListener('stop', async () => {
-		isRecording = false;
-		isPaused = false;
-		isProcessing = true;
+	async function handleRecordEnd(data: AudioData) {
+		audioData = data;
+		status = 'processing';
+		
+		// Simulate a short processing delay for UX
 		await sleep(2000);
+		
+		status = 'editing';
+	}
 
-		try {
-			// Process the audio data
-			audioData = await recorder.getAudio();
-			if (audioData) {
-				const waveEngine = new EditorWaveEngine();
-				waveData = await waveEngine.load(audioData.file);
-				console.log('✅ Waveform data generated:', waveData);
-				isProcessing = false;
-				showEditingView = true;
-			} else {
-				throw new Error('No recording data available');
-			}
-		} catch (error) {
-			console.error('❌ Processing error:', error);
-			isProcessing = false;
-		}
-	});
-
-	recorder.addEventListener('timer', (elapsed) => {
-		elapsedSeconds = elapsed;
-	});
-
-	recorder.addEventListener('pause', () => {
-		isPaused = true;
-	});
-
-	recorder.addEventListener('resume', () => {
-		isPaused = false;
-	});
-
-	recorder.addEventListener('error', (error) => {
-		console.error('❌ Recording error:', error);
-	});
-
-	function handlePauseResume(paused: boolean) {
-		if (paused) {
-			recorder.resume();
-		} else {
-			recorder.pause();
-		}
+	function handleCancelRecording() {
+		status = 'idle';
+		audioData = null;
 	}
 
 	function handleCloseEditing() {
@@ -95,22 +38,22 @@
 	}
 
 	function handleSaveSuccess() {
-		toast.success('Recording saved successfully-!');
+		toast.success('Recording saved successfully!');
 		gotoDashboard();
 	}
 
 	function handleSaveError(error: string) {
 		toast.error(`Error saving recording: ${error}`);
-		//TODO show error toast/notification here instead of just setting state
 		console.error('Save error:', error);
 	}
+
 	function gotoDashboard() {
 		goto('/app');
 	}
 </script>
 
 <div class="flex min-h-svh flex-col">
-	{#if !isRecording && !isProcessing && !showEditingView}
+	{#if status === 'idle'}
 		<div class="flex flex-1 flex-col items-center justify-center p-8 py-20">
 			<div class="mb-12 text-center">
 				<h2 class="text-2xl font-bold tracking-tight text-foreground">Ready to capture?</h2>
@@ -122,7 +65,7 @@
 				<div class="absolute h-32 w-32 animate-pulse rounded-full bg-muted/40"></div>
 				
 				<Button
-					onclick={() => recorder.start()}
+					onclick={() => status = 'recording'}
 					size="icon"
 					class="relative h-20 w-20 rounded-full bg-primary shadow-xl transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
 				>
@@ -130,17 +73,19 @@
 				</Button>
 			</div>
 		</div>
-	{:else if isRecording}
+	{:else if status === 'recording'}
 		<!-- Recording State -->
-		<RecordingView {recorder} {elapsedString} {isPaused} onPauseResume={handlePauseResume} />
-	{:else if isProcessing}
+		<RecordingView 
+			onRecordEnd={handleRecordEnd}
+			onCancel={handleCancelRecording}
+		/>
+	{:else if status === 'processing'}
 		<!-- Processing State -->
-		<ProcessingView {elapsedSeconds} />
-	{:else if showEditingView && audioData && waveData}
+		<ProcessingView elapsedSeconds={audioData?.duration || 0} />
+	{:else if status === 'editing' && audioData}
 		<!-- Editing State -->
 		<EditingView
 			{audioData}
-			{waveData}
 			onClose={handleCloseEditing}
 			onSaveSuccess={handleSaveSuccess}
 			onSaveError={handleSaveError}

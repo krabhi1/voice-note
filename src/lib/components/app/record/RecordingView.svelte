@@ -1,51 +1,125 @@
 <script lang="ts">
 	import { Square, Play, Pause, Mic } from '@lucide/svelte';
-	import type { AudioRecorder } from '$lib/audio/recorder';
-	import { RecordingWaveEngine } from '$lib/audio/RecordingWaveEngine';
-	import RecordingWaveform from '$lib/components/common/RecordingWaveform.svelte';
+	import { onMount } from 'svelte';
+	import WaveSurfer from 'wavesurfer.js';
+	import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js';
+	import { formatDuration, sleep } from '$lib/utils';
+	import type { AudioData } from '$lib/types';
+	import { toast } from 'svelte-sonner';
 
 	interface Props {
-		recorder: AudioRecorder;
-		elapsedString: string;
-		isPaused: boolean;
-		onPauseResume: (paused: boolean) => void;
+		onRecordEnd: (data: AudioData) => void;
+		onCancel?: () => void;
 	}
 
-	let { recorder, elapsedString, isPaused, onPauseResume }: Props = $props();
+	let { onRecordEnd, onCancel }: Props = $props();
 
-	// Full history bars (updated by wave engine)
-	let bars = $state<number[]>([]);
+	let container = $state<HTMLDivElement | null>(null);
+	let wavesurfer: WaveSurfer;
+	let recordPlugin: RecordPlugin;
+	let micStream = $state<MediaStream | null>(null);
 
-	// Wave engine with pause & resume supported
-	const waveEngine = new RecordingWaveEngine({
-		smoothing: 0.6,
-		onUpdate: (vals) => (bars = vals)
-	});
+	let isPaused = $state(false);
+	let elapsedSeconds = $state(0);
+	const elapsedString = $derived.by(() => formatDuration(elapsedSeconds));
 
-	// START / STOP when recorder changes
-	$effect(() => {
-		if (recorder.isRecording() && recorder.stream) {
-			// Start engine
-			waveEngine.start(recorder.stream);
-		} else {
-			// Stop everything
-			waveEngine.stop();
+	onMount(() => {
+		if (container) {
+			wavesurfer = WaveSurfer.create({
+				container,
+				waveColor: 'rgb(161, 161, 170)', // neutral-400
+				progressColor: 'rgb(124, 58, 237)', // violet-600
+				cursorWidth: 0,
+				barWidth: 3,
+				barGap: 3,
+				barRadius: 3,
+				height: 192, // h-48
+				normalize: false
+			});
+
+			recordPlugin = wavesurfer.registerPlugin(
+				RecordPlugin.create({
+					scrollingWaveform: true,
+					renderRecordedAudio: false
+				})
+			);
+
+			// Event Listeners
+			recordPlugin.on('record-pause', () => {
+				isPaused = true;
+			});
+
+			recordPlugin.on('record-resume', () => {
+				isPaused = false;
+			});
+
+			recordPlugin.on('record-progress', (time: number) => {
+				elapsedSeconds = time / 1000;
+			});
+
+			recordPlugin.on('record-end', async (blob: Blob) => {
+				// Stop the stream tracks to release mic
+				if (micStream) {
+					micStream.getTracks().forEach((t) => t.stop());
+					micStream = null;
+				}
+
+				try {
+					const file = new File([blob], 'recording.webm', { type: blob.type });
+					const audioData: AudioData = {
+						file,
+						duration: elapsedSeconds,
+						url: URL.createObjectURL(file),
+						size: file.size
+					};
+
+					onRecordEnd(audioData);
+				} catch (error) {
+					console.error(' Processing error:', error);
+					toast.error('Failed to process recording');
+					onCancel?.();
+				}
+			});
+
+			// Start Recording Automatically
+			startRecording();
 		}
+
+		return () => {
+			if (recordPlugin) {
+				recordPlugin.destroy();
+			}
+			if (wavesurfer) {
+				wavesurfer.destroy();
+			}
+			if (micStream) {
+				micStream.getTracks().forEach((t) => t.stop());
+			}
+		};
 	});
 
-	// PAUSE / RESUME waveform when recorder pauses
-	$effect(() => {
+	async function startRecording() {
+		try {
+			micStream = await recordPlugin.startMic();
+			await recordPlugin.startRecording();
+		} catch (err) {
+			console.error('Failed to start recording', err);
+			toast.error('Could not access microphone');
+			onCancel?.();
+		}
+	}
+
+	function togglePause() {
 		if (isPaused) {
-			waveEngine.pause();
+			recordPlugin.resumeRecording();
 		} else {
-			waveEngine.resume();
+			recordPlugin.pauseRecording();
 		}
-	});
+	}
 
-	// Cleanup on unmount
-	$effect(() => {
-		return () => waveEngine.stop();
-	});
+	function stopRecording() {
+		recordPlugin.stopRecording();
+	}
 </script>
 
 <div class="flex flex-1 flex-col items-center justify-center bg-background p-6 sm:p-12">
@@ -53,7 +127,9 @@
 		<!-- Status Header -->
 		<div class="mb-12 flex items-center justify-between border-b border-muted/30 pb-8">
 			<div class="flex items-center gap-4">
-				<div class="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground"
+				>
 					<Mic class="h-5 w-5" />
 				</div>
 				<div>
@@ -75,13 +151,17 @@
 		</div>
 
 		<!-- Waveform Container -->
-		<div class="relative mb-12 rounded-lg border border-muted bg-card p-10 shadow-xl shadow-muted/20">
+		<div
+			class="relative mb-12 rounded-lg border border-muted bg-card p-10 shadow-xl shadow-muted/20"
+		>
 			<div class="h-48 w-full overflow-hidden">
-				<RecordingWaveform {bars} barWidth={3} gap={2} />
+				<div bind:this={container} class="h-full w-full"></div>
 			</div>
-			
+
 			<!-- Decorative Grid Lines -->
-			<div class="absolute inset-0 pointer-events-none flex flex-col justify-between p-6 opacity-[0.03]">
+			<div
+				class="pointer-events-none absolute inset-0 flex flex-col justify-between p-6 opacity-[0.03]"
+			>
 				{#each Array(6) as _}
 					<div class="w-full border-t border-foreground"></div>
 				{/each}
@@ -91,9 +171,7 @@
 		<!-- Controls -->
 		<div class="flex items-center justify-center gap-8">
 			<button
-				onclick={() => {
-					onPauseResume(isPaused);
-				}}
+				onclick={togglePause}
 				class="flex h-16 w-16 items-center justify-center rounded-2xl border border-primary bg-card text-primary transition-all hover:bg-muted/5 active:scale-95"
 				aria-label={isPaused ? 'Resume' : 'Pause'}
 			>
@@ -105,21 +183,16 @@
 			</button>
 
 			<button
-				onclick={() => {
-					recorder.stop();
-					waveEngine.stop();
-				}}
+				onclick={stopRecording}
 				class="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500 text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95"
 				aria-label="Stop and Save"
 			>
 				<Square class="h-7 w-7 fill-current" />
 			</button>
 		</div>
-		
+
 		<div class="mt-16 text-center">
-			<p class="text-xs font-bold text-secondary">
-				Finalize recording to start editing
-			</p>
+			<p class="text-xs font-bold text-secondary">Finalize recording to start editing</p>
 		</div>
 	</div>
 </div>
