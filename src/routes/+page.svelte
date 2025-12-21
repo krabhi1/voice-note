@@ -26,9 +26,6 @@
 							</Button>
 						</a>
 					{:else}
-						<a href="/login" class="text-sm font-bold text-secondary hover:text-primary transition-colors">
-							Sign In
-						</a>
 						<a href="/login">
 							<Button size="sm" class="bg-primary text-primary-foreground hover:bg-primary/90">
 								Get Started
@@ -89,7 +86,7 @@
 						</div>
 						<div class="w-12"></div>
 					</div>
-					
+
 					<!-- Mockup Content -->
 					<div class="flex h-[400px] bg-card">
 						<!-- Sidebar -->
@@ -103,7 +100,7 @@
 								{/each}
 							</div>
 						</div>
-						
+
 						<!-- Main Area -->
 						<div class="flex-1 p-6">
 							<div class="mb-8 flex items-center justify-between">
@@ -115,7 +112,7 @@
 									</div>
 								</div>
 							</div>
-							
+
 							<div class="space-y-3">
 								{#each [1, 0.7, 0.9, 0.5] as width, i}
 									<div class="group flex items-center justify-between border border-muted/30 p-4 transition-colors hover:bg-muted/10">

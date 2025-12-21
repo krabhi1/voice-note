@@ -11,15 +11,10 @@
 	import { toast } from 'svelte-sonner';
 	import { tick } from 'svelte';
 
-	interface Props {
-		recording: Recording;
-	}
-
-	let { recording }: Props = $props();
+	let { recording }: { recording: Recording } = $props();
 
 	let isEditing = $state(false);
 	let tempTitle = $state(recording.title);
-
 	let inputRef = $state<HTMLInputElement | null>(null);
 
 	async function startEditing() {
@@ -30,79 +25,39 @@
 		inputRef?.select();
 	}
 
-	function cancelEditing() {
-		isEditing = false;
-		tempTitle = recording.title;
-	}
-
 	const submitRename: SubmitFunction = () => {
 		return async ({ result, update }) => {
 			isEditing = false;
-			if (result.type === 'success') {
-				await update();
-			} else if (result.type === 'failure') {
-				toast.error(result?.data?.form.message || 'Failed to rename recording.');
-				cancelEditing();
+			if (result.type === 'failure') {
+				toast.error(result?.data?.form.message || 'Failed to rename.');
+				tempTitle = recording.title;
 			}
+			await update();
 		};
 	};
 
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			cancelEditing();
-		}
-	}
-
-	function playRecording(recordingId: string) {
-		goto(`/app/${recordingId}`);
-	}
-
-	function downloadRecording(file_url?: string, title?: string) {
-		if (!file_url) {
-			toast.error('File URL is not available for download.');
-			return;
-		}
-		try {
-			const url = `/app/audio/${file_url}`;
-			const a = document.createElement('a');
-			a.href = url;
-			if (title) {
-				const safeTitle = title.replace(/[^a-z0-9_\-.\s]/gi, '').trim() || 'recording';
-				a.download = `${safeTitle}.mp3`;
-			}
-			a.rel = 'noopener noreferrer';
-			document.body.appendChild(a);
-			a.click();
-			a.remove();
-			toast.success('Download started');
-		} catch (err) {
-			console.error('Download failed', err);
-			toast.error('Failed to start download.');
-		}
+	function downloadRecording() {
+		if (!recording.file_url) return toast.error('File unavailable');
+		const a = document.createElement('a');
+		a.href = `/app/audio/${recording.file_url}`;
+		a.download = `${recording.title.replace(/[^a-z0-9]/gi, '_')}.mp3`;
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		toast.success('Download started');
 	}
 </script>
 
 <Table.Row class="group border-b border-muted/30 transition-colors hover:bg-muted/5">
 	<Table.Cell class="py-4">
-		<Button
-			onclick={() => playRecording(recording.id)}
-			variant="ghost"
-			size="icon"
-		>
+		<Button onclick={() => goto(`/app/${recording.id}`)} variant="ghost" size="icon">
 			<Play class="h-3 w-3 fill-current" />
-			<span class="sr-only">Play</span>
 		</Button>
 	</Table.Cell>
 
 	<Table.Cell class="min-w-0 py-4 font-bold tracking-tight text-foreground" ondblclick={startEditing}>
 		{#if isEditing}
-			<form
-				method="POST"
-				action="?/renameVoice"
-				use:enhance={submitRename}
-				class="flex w-full items-center"
-			>
+			<form method="POST" action="?/renameVoice" use:enhance={submitRename}>
 				<input type="hidden" name="id" value={recording.id} />
 				<input
 					type="text"
@@ -110,8 +65,8 @@
 					bind:value={tempTitle}
 					bind:this={inputRef}
 					class="h-8 w-full border-b border-primary bg-transparent p-0 text-sm font-bold outline-none"
-					onkeydown={handleKeydown}
-					onblur={cancelEditing}
+					onkeydown={(e) => e.key === 'Escape' && (isEditing = false)}
+					onblur={() => (isEditing = false)}
 				/>
 			</form>
 		{:else}
@@ -133,73 +88,35 @@
 
 	<Table.Cell class="py-4">
 		<div class="flex justify-end">
-			{@render MoreOptionButton(recording)}
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<button {...props} class="flex h-8 w-8 items-center justify-center text-secondary opacity-0 transition-all group-hover:opacity-100 hover:text-primary">
+							<EllipsisVertical class="h-4 w-4" />
+						</button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content class="w-48 rounded-md border-muted/30 bg-card p-0 shadow-xl" align="end">
+					<DropdownMenu.Item class="flex gap-3 px-4 py-3 text-sm font-semibold" onclick={startEditing}>
+						<Pen class="h-3.5 w-3.5" /> Rename
+					</DropdownMenu.Item>
+					<DropdownMenu.Item class="flex gap-3 px-4 py-3 text-sm font-semibold" onclick={downloadRecording}>
+						<Download class="h-3.5 w-3.5" /> Download
+					</DropdownMenu.Item>
+					<DropdownMenu.Separator class="m-0 h-px bg-muted/10" />
+					<form method="POST" action="?/deleteVoice" use:enhance={() => async ({ result, update }) => {
+						await update();
+						result.type === 'success' ? toast.success('Deleted') : toast.error('Failed to delete');
+					}}>
+						<input type="hidden" name="id" value={recording.id} />
+						<DropdownMenu.Item class="flex gap-3 px-4 py-3 text-sm font-semibold text-red-600 focus:bg-red-50">
+							<button type="submit" class="flex w-full items-center gap-3">
+								<Trash2 class="h-3.5 w-3.5" /> Delete
+							</button>
+						</DropdownMenu.Item>
+					</form>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 		</div>
 	</Table.Cell>
 </Table.Row>
-
-{#snippet MoreOptionButton({ id, file_url, title }: Recording)}
-	<DropdownMenu.Root>
-		<DropdownMenu.Trigger>
-			{#snippet child({ props })}
-				<button
-					{...props}
-					class="flex h-8 w-8 items-center justify-center text-secondary opacity-0 transition-all group-hover:opacity-100 hover:text-primary"
-				>
-					<EllipsisVertical class="h-4 w-4" />
-					<span class="sr-only">More options</span>
-				</button>
-			{/snippet}
-		</DropdownMenu.Trigger>
-
-		<DropdownMenu.Content
-			class="w-48 rounded-md border-muted/30 bg-card p-0 shadow-xl"
-			side="bottom"
-			align="end"
-		>
-			<DropdownMenu.Item
-				class="flex cursor-pointer items-center gap-3 rounded-sm px-4 py-3 text-sm font-semibold text-secondary focus:bg-muted/10 focus:text-foreground"
-				onclick={startEditing}
-			>
-				<Pen class="h-3.5 w-3.5" />
-				<span>Rename</span>
-			</DropdownMenu.Item>
-
-			<DropdownMenu.Item
-				class="flex cursor-pointer items-center gap-3 rounded-sm px-4 py-3 text-sm font-semibold text-secondary focus:bg-muted/10 focus:text-foreground"
-				onclick={() => downloadRecording(file_url, title)}
-			>
-				<Download class="h-3.5 w-3.5" />
-				<span>Download</span>
-			</DropdownMenu.Item>
-
-			<DropdownMenu.Separator class="m-0 h-px bg-muted/10" />
-
-			<form
-				method="POST"
-				action="?/deleteVoice"
-				use:enhance={(() => {
-					return async ({ result, update }) => {
-						await update();
-						if (result.type === 'success') {
-							toast.success('Recording deleted successfully');
-						} else if (result.type === 'failure') {
-							const errorMessage = result.data?.form.message || 'An unexpected error occurred.';
-							toast.error(errorMessage);
-						}
-					};
-				}) as SubmitFunction}
-			>
-				<input type="hidden" name="id2" value={id} />
-				<DropdownMenu.Item
-					class="flex cursor-pointer items-center gap-3 rounded-sm px-4 py-3 text-sm font-semibold text-red-600 focus:bg-red-50 focus:text-red-600"
-				>
-					<button type="submit" class="flex w-full items-center gap-3">
-						<Trash2 class="h-3.5 w-3.5" />
-						<span>Delete</span>
-					</button>
-				</DropdownMenu.Item>
-			</form>
-		</DropdownMenu.Content>
-	</DropdownMenu.Root>
-{/snippet}

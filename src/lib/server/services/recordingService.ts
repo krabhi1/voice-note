@@ -1,92 +1,61 @@
 import type { RecordingRepository } from '$lib/server/repositories/recordingRepository';
 import type { StorageService } from './storageService';
-import type { PaginationParams, PaginatedResult } from '$lib/utils/pagination';
-import { createPaginationMetadata } from '$lib/utils/pagination';
+import { createPaginationMetadata, type PaginationParams, type PaginatedResult } from '$lib/utils/pagination';
 import type { Recording } from '$lib/server/db/schema';
-import { fail } from '@sveltejs/kit';
 
 export class RecordingService {
-  constructor(
-    private recordingRepository: RecordingRepository,
-    private storageService: StorageService
-  ) { }
+	constructor(
+		private recordingRepository: RecordingRepository,
+		private storageService: StorageService
+	) {}
 
-  async createRecording(file: File, duration: number, userId: string,name:string) {
-    // Upload file to storage
-    const fileUrl = await this.storageService.uploadRecording(file, userId);
-    // Create recording entry in database
-    const recording = await this.recordingRepository.create({
-      title: name,
-      duration,
-      file_url: fileUrl,
-      userId,
-      content_type: file.type,
-      size: file.size
-    });
-    return recording;
-  }
-  async getRecordingsByUser(
-    userId: string,
-    paginationParams?: PaginationParams
-  ): Promise<PaginatedResult<Recording>> {
-    if (!paginationParams) {
-      const [recordings, totalCount] = await Promise.all([
-        this.recordingRepository.getByUserId(userId),
-        this.recordingRepository.countByUserId(userId)
-      ]);
+	async createRecording(file: File, duration: number, userId: string, name: string) {
+		const file_url = await this.storageService.uploadRecording(file, userId);
+		return this.recordingRepository.create({
+			title: name,
+			duration,
+			file_url,
+			userId,
+			content_type: file.type,
+			size: file.size
+		});
+	}
 
-      const pagination = createPaginationMetadata(
-        1,
-        recordings.length,
-        totalCount
-      );
+	async getRecordingsByUser(userId: string, params?: PaginationParams): Promise<PaginatedResult<Recording>> {
+		const [data, total] = await Promise.all([
+			params
+				? this.recordingRepository.getByUserIdPaginated(userId, params)
+				: this.recordingRepository.getByUserId(userId),
+			this.recordingRepository.countByUserId(userId)
+		]);
 
-      return {
-        data: recordings,
-        pagination
-      };
-    }
+		return {
+			data,
+			pagination: createPaginationMetadata(
+				params?.page ?? 1,
+				params?.pageSize ?? data.length,
+				total
+			)
+		};
+	}
 
-    const [recordings, totalCount] = await Promise.all([
-      this.recordingRepository.getByUserIdPaginated(userId, paginationParams),
-      this.recordingRepository.countByUserId(userId)
-    ]);
+	async getRecordingByIdAndUser(id: string, userId: string) {
+		return this.recordingRepository.getByIdAndUserId(id, userId);
+	}
 
-    const pagination = createPaginationMetadata(
-      paginationParams.page,
-      paginationParams.pageSize,
-      totalCount
-    );
+	async renameRecording(id: string, userId: string, title: string) {
+		if (!(await this.getRecordingByIdAndUser(id, userId))) {
+			throw new Error('Recording not found');
+		}
+		return this.recordingRepository.update(id, { title });
+	}
 
-    return {
-      data: recordings,
-      pagination
-    };
-  }
-  async getRecordingByIdAndUser(recordId: string, userId: string) {
-    const recording = await this.recordingRepository.getByIdAndUserId(
-      recordId,
-      userId
-    );
-    return recording;
-  }
-  async renameRecording(recordId: string, userId: string, newTitle: string) {
-    const recording = await this.getRecordingByIdAndUser(recordId, userId);
-    if (!recording) {
-      throw fail(404, { message: 'Recording not found' });
-    }
-    return await this.recordingRepository.update(recordId, { title: newTitle });
-  }
-
-  async deleteRecording(recordId: string, userId: string) {
-    const recording = await this.getRecordingByIdAndUser(recordId, userId);
-    if (!recording) {
-      throw fail(404, { message: 'Recording not found' });
-    }
-    // Delete from storage
-    await this.storageService.delete(recording.file_url);
-    // Delete from database
-    await this.recordingRepository.deleteById(recordId);
-    return true;
-  }
+	async deleteRecording(id: string, userId: string) {
+		const recording = await this.getRecordingByIdAndUser(id, userId);
+		if (!recording) {
+			throw new Error('Recording not found');
+		}
+		await this.storageService.delete(recording.file_url);
+		return this.recordingRepository.deleteById(id);
+	}
 }

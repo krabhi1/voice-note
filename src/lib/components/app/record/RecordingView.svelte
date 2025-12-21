@@ -3,9 +3,10 @@
 	import { onMount } from 'svelte';
 	import WaveSurfer from 'wavesurfer.js';
 	import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js';
-	import { formatDuration, sleep } from '$lib/utils';
+	import { formatDuration } from '$lib/utils';
 	import type { AudioData } from '$lib/types';
 	import { toast } from 'svelte-sonner';
+	import { WAVEFORM_CONFIG } from '$lib/audio/config';
 
 	interface Props {
 		onRecordEnd: (data: AudioData) => void;
@@ -16,85 +17,47 @@
 
 	let container = $state<HTMLDivElement | null>(null);
 	let wavesurfer: WaveSurfer;
-	let recordPlugin: RecordPlugin;
-	let micStream = $state<MediaStream | null>(null);
+	let recordPlugin: any;
+	let micStream: MediaStream | null = null;
 
 	let isPaused = $state(false);
 	let elapsedSeconds = $state(0);
-	const elapsedString = $derived.by(() => formatDuration(elapsedSeconds));
+	const elapsedString = $derived(formatDuration(elapsedSeconds));
 
 	onMount(() => {
-		if (container) {
-			wavesurfer = WaveSurfer.create({
-				container,
-				waveColor: 'rgb(161, 161, 170)', // neutral-400
-				progressColor: 'rgb(124, 58, 237)', // violet-600
-				cursorWidth: 0,
-				barWidth: 3,
-				barGap: 3,
-				barRadius: 3,
-				height: 192, // h-48
-				normalize: false
+		if (!container) return;
+
+		wavesurfer = WaveSurfer.create({
+			...WAVEFORM_CONFIG,
+			container,
+			cursorWidth: 0,
+			normalize: false
+		});
+
+		recordPlugin = wavesurfer.registerPlugin(
+			RecordPlugin.create({ scrollingWaveform: true, renderRecordedAudio: false })
+		);
+
+		recordPlugin.on('record-pause', () => (isPaused = true));
+		recordPlugin.on('record-resume', () => (isPaused = false));
+		recordPlugin.on('record-progress', (time: number) => (elapsedSeconds = time / 1000));
+
+		recordPlugin.on('record-end', (blob: Blob) => {
+			micStream?.getTracks().forEach((t) => t.stop());
+			const file = new File([blob], 'recording.webm', { type: blob.type });
+			onRecordEnd({
+				file,
+				duration: elapsedSeconds,
+				url: URL.createObjectURL(file),
+				size: file.size
 			});
+		});
 
-			recordPlugin = wavesurfer.registerPlugin(
-				RecordPlugin.create({
-					scrollingWaveform: true,
-					renderRecordedAudio: false
-				})
-			);
-
-			// Event Listeners
-			recordPlugin.on('record-pause', () => {
-				isPaused = true;
-			});
-
-			recordPlugin.on('record-resume', () => {
-				isPaused = false;
-			});
-
-			recordPlugin.on('record-progress', (time: number) => {
-				elapsedSeconds = time / 1000;
-			});
-
-			recordPlugin.on('record-end', async (blob: Blob) => {
-				// Stop the stream tracks to release mic
-				if (micStream) {
-					micStream.getTracks().forEach((t) => t.stop());
-					micStream = null;
-				}
-
-				try {
-					const file = new File([blob], 'recording.webm', { type: blob.type });
-					const audioData: AudioData = {
-						file,
-						duration: elapsedSeconds,
-						url: URL.createObjectURL(file),
-						size: file.size
-					};
-
-					onRecordEnd(audioData);
-				} catch (error) {
-					console.error(' Processing error:', error);
-					toast.error('Failed to process recording');
-					onCancel?.();
-				}
-			});
-
-			// Start Recording Automatically
-			startRecording();
-		}
+		startRecording();
 
 		return () => {
-			if (recordPlugin) {
-				recordPlugin.destroy();
-			}
-			if (wavesurfer) {
-				wavesurfer.destroy();
-			}
-			if (micStream) {
-				micStream.getTracks().forEach((t) => t.stop());
-			}
+			wavesurfer?.destroy();
+			micStream?.getTracks().forEach((t) => t.stop());
 		};
 	});
 
@@ -103,33 +66,17 @@
 			micStream = await recordPlugin.startMic();
 			await recordPlugin.startRecording();
 		} catch (err) {
-			console.error('Failed to start recording', err);
 			toast.error('Could not access microphone');
 			onCancel?.();
 		}
-	}
-
-	function togglePause() {
-		if (isPaused) {
-			recordPlugin.resumeRecording();
-		} else {
-			recordPlugin.pauseRecording();
-		}
-	}
-
-	function stopRecording() {
-		recordPlugin.stopRecording();
 	}
 </script>
 
 <div class="flex flex-1 flex-col items-center justify-center bg-background p-6 sm:p-12">
 	<div class="w-full max-w-3xl">
-		<!-- Status Header -->
 		<div class="mb-12 flex items-center justify-between border-b border-muted/30 pb-8">
 			<div class="flex items-center gap-4">
-				<div
-					class="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground"
-				>
+				<div class="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
 					<Mic class="h-5 w-5" />
 				</div>
 				<div>
@@ -150,49 +97,33 @@
 			</div>
 		</div>
 
-		<!-- Waveform Container -->
-		<div
-			class="relative mb-12 rounded-lg border border-muted bg-card p-10 shadow-xl shadow-muted/20"
-		>
+		<div class="relative mb-12 rounded-lg border border-muted bg-card p-10 shadow-xl shadow-muted/20">
 			<div class="h-48 w-full overflow-hidden">
 				<div bind:this={container} class="h-full w-full"></div>
 			</div>
-
-			<!-- Decorative Grid Lines -->
-			<div
-				class="pointer-events-none absolute inset-0 flex flex-col justify-between p-6 opacity-[0.03]"
-			>
+			<div class="pointer-events-none absolute inset-0 flex flex-col justify-between p-6 opacity-[0.03]">
 				{#each Array(6) as _}
 					<div class="w-full border-t border-foreground"></div>
 				{/each}
 			</div>
 		</div>
 
-		<!-- Controls -->
 		<div class="flex items-center justify-center gap-8">
 			<button
-				onclick={togglePause}
-				class="flex h-16 w-16 items-center justify-center rounded-2xl border border-primary bg-card text-primary transition-all hover:bg-muted/5 active:scale-95"
+				onclick={() => (isPaused ? recordPlugin.resumeRecording() : recordPlugin.pauseRecording())}
+				class="flex h-16 w-16 items-center justify-center rounded-md border bg-card text-foreground transition-all hover:border-primary active:scale-95"
 				aria-label={isPaused ? 'Resume' : 'Pause'}
 			>
-				{#if isPaused}
-					<Play class="h-7 w-7 fill-current" />
-				{:else}
-					<Pause class="h-7 w-7 fill-current" />
-				{/if}
+				{#if isPaused}<Play class="h-7 w-7 fill-current" />{:else}<Pause class="h-7 w-7 fill-current" />{/if}
 			</button>
 
 			<button
-				onclick={stopRecording}
-				class="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500 text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95"
+				onclick={() => recordPlugin.stopRecording()}
+				class="flex h-16 w-16 items-center justify-center rounded-md bg-red-500 text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95"
 				aria-label="Stop and Save"
 			>
 				<Square class="h-7 w-7 fill-current" />
 			</button>
-		</div>
-
-		<div class="mt-16 text-center">
-			<p class="text-xs font-bold text-secondary">Finalize recording to start editing</p>
 		</div>
 	</div>
 </div>

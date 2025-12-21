@@ -1,11 +1,6 @@
 import { isActionFailure, fail } from '@sveltejs/kit';
 
-export function handleError(error: unknown) {
-	console.error(error);
-	if (isActionFailure(error)) {
-		return error;
-	}
-	return fail(500, {
-		message: 'Internal Server Error'
-	});
-}
+export const handleError = (e: any) => {
+	console.error(e);
+	return isActionFailure(e) ? e : fail(500, { message: e?.message || 'Internal Server Error' });
+};

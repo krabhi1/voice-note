@@ -6,72 +6,57 @@
 	}
 
 	let { elapsedSeconds }: Props = $props();
-
-	const dots = $state(['.', '..', '...']);
 	let currentDot = $state(0);
 
-	let interval: ReturnType<typeof setInterval>;
-
 	$effect(() => {
-		interval = setInterval(() => {
-			currentDot = (currentDot + 1) % dots.length;
-		}, 500);
-
-		return () => {
-			if (interval) clearInterval(interval);
-		};
+		const interval = setInterval(() => (currentDot = (currentDot + 1) % 3), 500);
+		return () => clearInterval(interval);
 	});
+
+	const specs = $derived([
+		{ label: 'Duration', value: `${Math.round(elapsedSeconds)}.00s` },
+		{ label: 'Task', value: 'Waveform Gen' }
+	]);
 </script>
 
 <div class="flex flex-1 flex-col items-center justify-center bg-background p-6">
 	<div class="w-full max-w-sm rounded-lg border border-muted bg-card p-10 shadow-xl shadow-muted/20">
 		<div class="flex flex-col items-center text-center">
-			<!-- Icon -->
 			<div class="mb-10 flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
 				<Loader2 class="h-5 w-5 animate-spin" />
 			</div>
 
-			<!-- Header -->
 			<div class="space-y-2">
 				<span class="text-xs font-bold text-secondary">System</span>
 				<h2 class="text-base font-bold text-foreground">
-					Analyzing Audio Stream{dots[currentDot]}
+					Analyzing Audio Stream{'.'.repeat(currentDot + 1)}
 				</h2>
 			</div>
 
-			<!-- Technical Specs -->
 			<div class="mt-10 w-full space-y-4 border-t border-muted/30 pt-8">
-				<div class="flex items-center justify-between">
-					<span class="text-xs font-bold text-secondary">Duration</span>
-					<span class="font-mono text-sm font-bold text-foreground">{Math.round(elapsedSeconds)}.00s</span>
-				</div>
-				<div class="flex items-center justify-between">
-					<span class="text-xs font-bold text-secondary">Task</span>
-					<span class="text-sm font-bold text-foreground">Waveform Gen</span>
-				</div>
+				{#each specs as spec}
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-bold text-secondary">{spec.label}</span>
+						<span class="font-mono text-sm font-bold text-foreground">{spec.value}</span>
+					</div>
+				{/each}
 				
-				<!-- Progress Bar -->
-				<div class="relative h-1 w-full bg-muted/20 overflow-hidden">
-					<div class="absolute inset-y-0 left-0 bg-primary animate-progress-ind"></div>
+				<div class="relative h-1 w-full overflow-hidden bg-muted/20">
+					<div class="absolute inset-y-0 left-0 bg-primary animate-progress"></div>
 				</div>
 			</div>
 
-			<div class="mt-10">
-				<p class="text-xs font-bold text-secondary">
-					Please do not close this window
-				</p>
-			</div>
+			<p class="mt-10 text-xs font-bold text-secondary">Please do not close this window</p>
 		</div>
 	</div>
 </div>
 
 <style>
-	@keyframes progress-ind {
-		0% { left: 0; width: 0; }
-		50% { left: 0; width: 100%; }
-		100% { left: 100%; width: 0; }
+	@keyframes progress {
+		0% { left: -40%; width: 40%; }
+		100% { left: 100%; width: 40%; }
 	}
-	.animate-progress-ind {
-		animation: progress-ind 2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+	.animate-progress {
+		animation: progress 1.5s ease-in-out infinite;
 	}
 </style>
