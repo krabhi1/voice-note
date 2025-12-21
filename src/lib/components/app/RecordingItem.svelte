@@ -82,7 +82,7 @@
 
 	<Table.Cell class="py-4 text-end">
 		<span class="font-mono text-xs font-medium text-secondary">
-			{formatDuration(recording.duration)}
+			{formatDuration(recording.duration / 1000)}
 		</span>
 	</Table.Cell>
 

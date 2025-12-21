@@ -60,6 +60,13 @@
 		isMuted = volume === 0;
 	}
 
+	const skipAmount = $derived.by(() => {
+		if (duration <= 30) return 2;
+		if (duration <= 120) return 5;
+		if (duration <= 600) return 10;
+		return 30;
+	});
+
 	const metadata = $derived([
 		{ icon: Clock, label: 'Duration', value: `${duration.toFixed(2)}s` },
 		{ icon: Mic, label: 'Source', value: 'Web Browser Audio' },
@@ -129,14 +136,40 @@
 				</div>
 
 				<div class="flex items-center justify-center gap-6">
-					<button onclick={() => wavesurfer?.skip(-10)} disabled={!isReady} class="flex h-12 w-12 items-center justify-center rounded-2xl border border-muted bg-card text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-30">
+					<button
+						onclick={() => wavesurfer?.skip(-skipAmount)}
+						disabled={!isReady}
+						class="group relative flex h-12 w-12 items-center justify-center rounded-2xl border border-muted bg-card text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-30"
+						aria-label="Skip back {skipAmount} seconds"
+					>
 						<SkipBack class="h-5 w-5" />
+						<span
+							class="absolute -bottom-6 text-[10px] font-bold opacity-0 transition-opacity group-hover:opacity-100"
+							>{skipAmount}s</span
+						>
 					</button>
-					<button onclick={() => wavesurfer?.playPause()} disabled={!isReady} class="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50">
-						{#if !isReady}<Loader2 class="h-8 w-8 animate-spin" />{:else if isPlaying}<Pause class="h-8 w-8 fill-current" />{:else}<Play class="h-8 w-8 fill-current ml-1" />{/if}
+
+					<button
+						onclick={() => wavesurfer?.playPause()}
+						disabled={!isReady}
+						class="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50"
+					>
+						{#if !isReady}<Loader2 class="h-8 w-8 animate-spin" />{:else if isPlaying}<Pause
+								class="h-8 w-8 fill-current"
+							/>{:else}<Play class="h-8 w-8 fill-current ml-1" />{/if}
 					</button>
-					<button onclick={() => wavesurfer?.skip(10)} disabled={!isReady} class="flex h-12 w-12 items-center justify-center rounded-2xl border border-muted bg-card text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-30">
+
+					<button
+						onclick={() => wavesurfer?.skip(skipAmount)}
+						disabled={!isReady}
+						class="group relative flex h-12 w-12 items-center justify-center rounded-2xl border border-muted bg-card text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-30"
+						aria-label="Skip forward {skipAmount} seconds"
+					>
 						<SkipForward class="h-5 w-5" />
+						<span
+							class="absolute -bottom-6 text-[10px] font-bold opacity-0 transition-opacity group-hover:opacity-100"
+							>{skipAmount}s</span
+						>
 					</button>
 				</div>
 

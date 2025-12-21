@@ -86,7 +86,6 @@
 								</div>
 								<div class="flex flex-col items-start overflow-hidden">
 									<span class="truncate text-xs font-bold">{user.name}</span>
-									<span class="text-[10px] font-mono text-secondary">PRO PLAN</span>
 								</div>
 							</div>
 							<EllipsisVertical class="h-3.5 w-3.5 text-secondary" />
