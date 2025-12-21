@@ -35,6 +35,9 @@ importers:
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
+      wavesurfer.js:
+        specifier: ^7.12.1
+        version: 7.12.1
       zod:
         specifier: ^4.1.12
         version: 4.1.12
@@ -2792,6 +2795,9 @@ packages:
         optional: true
       jsdom:
         optional: true
+
+  wavesurfer.js@7.12.1:
+    resolution: {integrity: sha512-NswPjVHxk0Q1F/VMRemCPUzSojjuHHisQrBqQiRXg7MVbe3f5vQ6r0rTTXA/a/neC/4hnOEC4YpXca4LpH0SUg==}
 
   web-streams-polyfill@3.3.3:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
@@ -5659,6 +5665,8 @@ snapshots:
       - terser
       - tsx
       - yaml
+
+  wavesurfer.js@7.12.1: {}
 
   web-streams-polyfill@3.3.3: {}
 

@@ -2,84 +2,62 @@
 	import { onMount, onDestroy } from 'svelte';
 	import type { PageProps } from './$types';
 	import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Loader2, Mic, Clock, Calendar, FileAudio, ChevronLeft } from '@lucide/svelte';
-	import { toast } from 'svelte-sonner';
-	import { EditorWaveEngine, type EditorWaveData } from '$lib/audio/EditorWaveEngine';
-	import { AudioWaveformRenderer } from '$lib/audio/AudioWaveformRenderer';
+	import WaveSurfer from 'wavesurfer.js';
 
 	let { data }: PageProps = $props();
 
 	const url = `/app/audio/${data.recording.file_url}`;
 
-	let audio: HTMLAudioElement;
+	let wavesurfer: WaveSurfer;
+	let container: HTMLDivElement;
+	
 	let isPlaying = $state(false);
 	let duration = $state(0);
 	let currentTime = $state(0);
 	let volume = $state(1);
 	let isMuted = $state(false);
 	let playbackRate = $state(1);
-
-	let isDragging = $state(false);
 	let isReady = $state(false);
 
-	let waveData = $state<EditorWaveData | null>(null);
-	let canvasEl = $state<HTMLCanvasElement | null>(null);
-	let renderer: AudioWaveformRenderer | null = null;
+	onMount(() => {
+		wavesurfer = WaveSurfer.create({
+			container: container,
+			url: url,
+			waveColor: 'rgb(161, 161, 170)', // tailwind neutral-400
+			progressColor: 'rgb(124, 58, 237)', // tailwind violet-600 (primary)
+			cursorColor: 'rgb(124, 58, 237)',
+			barWidth: 2,
+			barGap: 3,
+			barRadius: 3,
+			height: 128, // h-32 = 128px
+			normalize: true,
+		});
 
-	let _onAudioError: (e: Event) => void;
+		wavesurfer.on('ready', () => {
+			isReady = true;
+			duration = wavesurfer.getDuration();
+		});
 
-	async function loadWaveform() {
-		try {
-			const response = await fetch(url);
-			const blob = await response.blob();
-			const file = new File([blob], 'audio.mp3', { type: 'audio/mpeg' });
-			const engine = new EditorWaveEngine();
-			waveData = await engine.load(file);
-			
-			if (canvasEl && waveData) {
-				renderer = new AudioWaveformRenderer(canvasEl);
-				renderer.setData(waveData.peaks, waveData.duration);
-				renderer.addEventListener('onSeek', (time) => {
-					if (audio) {
-						audio.currentTime = time;
-						currentTime = time;
-					}
-				});
-			}
-		} catch (err) {
-			console.error('Failed to load waveform:', err);
-		}
-	}
+		wavesurfer.on('audioprocess', (time) => {
+			currentTime = time;
+		});
+		
+		wavesurfer.on('interaction', () => {
+			currentTime = wavesurfer.getCurrentTime();
+		});
 
-	onMount(async () => {
-		if (audio) {
-			audio.volume = volume;
+		wavesurfer.on('play', () => (isPlaying = true));
+		wavesurfer.on('pause', () => (isPlaying = false));
+		wavesurfer.on('finish', () => (isPlaying = false));
 
-			_onAudioError = (e: Event) => {
-				console.error('Audio element error event:', e, 'mediaError:', audio.error);
-				toast.error('Failed to load audio');
-			};
-			audio.addEventListener('error', _onAudioError);
-		}
-		await loadWaveform();
-	});
-
-	onDestroy(() => {
-		if (audio && _onAudioError) {
-			audio.removeEventListener('error', _onAudioError);
-		}
-		renderer?.destroy();
+		return () => {
+			wavesurfer.destroy();
+		};
 	});
 
 	function togglePlay() {
-		if (!audio || !isReady) return;
-
-		if (audio.paused) {
-			audio.play();
-			isPlaying = true;
-		} else {
-			audio.pause();
-			isPlaying = false;
-		}
+		if (!isReady) return;
+		wavesurfer.playPause();
 	}
 
 	function formatTime(seconds: number) {
@@ -89,43 +67,31 @@
 		return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 	}
 
-	function handleTimeUpdate() {
-		if (!isDragging) {
-			currentTime = audio.currentTime;
-			renderer?.draw(currentTime);
-		}
-	}
-
-	function handleLoadedMetadata() {
-		duration = audio.duration;
-		isReady = true;
-	}
-
-
-
 	function toggleMute() {
+		if (!wavesurfer) return;
 		isMuted = !isMuted;
-		audio.muted = isMuted;
+		wavesurfer.setMuted(isMuted);
 	}
 
 	function togglePlaybackRate() {
-		if (!audio) return;
+		if (!wavesurfer) return;
 		const rates = [1, 1.25, 1.5, 2];
 		const currentIndex = rates.indexOf(playbackRate);
 		playbackRate = rates[(currentIndex + 1) % rates.length];
-		audio.playbackRate = playbackRate;
+		wavesurfer.setPlaybackRate(playbackRate);
 	}
 
 	function handleVolumeChange(e: Event) {
+		if (!wavesurfer) return;
 		const target = e.target as HTMLInputElement;
 		volume = parseFloat(target.value);
-		audio.volume = volume;
+		wavesurfer.setVolume(volume);
 		isMuted = volume === 0;
 	}
 
 	function skip(seconds: number) {
-		if (!audio) return;
-		audio.currentTime += seconds;
+		if (!wavesurfer || !isReady) return;
+		wavesurfer.skip(seconds);
 	}
 </script>
 
@@ -166,16 +132,7 @@
 	<!-- Main Content -->
 	<div class="flex-1 overflow-auto px-6 py-12 sm:px-10">
 		<div class="mx-auto max-w-5xl">
-			<audio
-				bind:this={audio}
-				src={url}
-				ontimeupdate={handleTimeUpdate}
-				onloadedmetadata={handleLoadedMetadata}
-				oncanplay={() => (isReady = true)}
-				onended={() => (isPlaying = false)}
-				class="hidden"
-			></audio>
-
+			
 			<!-- Player Interface -->
 			<div class="relative rounded-lg border border-muted bg-card p-10 shadow-xl shadow-muted/20">
 				<div class="mb-8 flex items-center justify-between">
@@ -199,10 +156,10 @@
 
 				<!-- Waveform Progress -->
 				<div class="relative mb-12 h-32 w-full bg-background border border-muted/30 rounded-md overflow-hidden">
-					<canvas bind:this={canvasEl} class="block h-full w-full cursor-pointer"></canvas>
+					<div bind:this={container} class="h-full w-full cursor-pointer"></div>
 					
-					{#if !waveData}
-						<div class="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+					{#if !isReady}
+						<div class="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-10">
 							<Loader2 class="h-6 w-6 animate-spin text-secondary" />
 						</div>
 					{/if}
