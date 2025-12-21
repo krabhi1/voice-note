@@ -56,7 +56,7 @@
 		ctx.clearRect(0, 0, width, height);
 
 		// bar color
-		ctx.fillStyle = '#34D399';
+		ctx.fillStyle = '#000000';
 
 		const step = barWidth + gap;
 		let x = width / 2;
@@ -75,7 +75,7 @@
 			if (x < 0) break;
 		}
 
-		ctx.strokeStyle = "#34D344";
+		ctx.strokeStyle = "#e4e4e7";
 		ctx.lineWidth = 1;
 		ctx.beginPath();
 		ctx.moveTo(0, centerY);

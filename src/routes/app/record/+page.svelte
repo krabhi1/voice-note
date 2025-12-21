@@ -112,17 +112,23 @@
 <div class="flex min-h-svh flex-col">
 	{#if !isRecording && !isProcessing && !showEditingView}
 		<div class="flex flex-1 flex-col items-center justify-center p-8 py-20">
-			<div class="mb-8 text-center text-gray-700">
-				<p class="text-lg">Click the button to start recording.</p>
+			<div class="mb-12 text-center">
+				<h2 class="text-2xl font-bold tracking-tight text-foreground">Ready to capture?</h2>
+				<p class="mt-2 text-base text-secondary">Click the button below to start recording</p>
 			</div>
 
-			<Button
-				onclick={() => recorder.start()}
-				size="icon"
-				class="mb-8 h-20 w-20 rounded-full shadow-lg transition-all hover:scale-105"
-			>
-				<Mic class="size-8" />
-			</Button>
+			<div class="relative flex items-center justify-center">
+				<!-- Outer breathing ring -->
+				<div class="absolute h-32 w-32 animate-pulse rounded-full bg-muted/40"></div>
+				
+				<Button
+					onclick={() => recorder.start()}
+					size="icon"
+					class="relative h-20 w-20 rounded-full bg-primary shadow-xl transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
+				>
+					<Mic class="size-8 text-primary-foreground" />
+				</Button>
+			</div>
 		</div>
 	{:else if isRecording}
 		<!-- Recording State -->

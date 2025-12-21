@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { Square, Play, Pause } from '@lucide/svelte';
+	import { Square, Play, Pause, Mic } from '@lucide/svelte';
 	import type { AudioRecorder } from '$lib/audio/recorder';
 	import { RecordingWaveEngine } from '$lib/audio/RecordingWaveEngine';
 	import RecordingWaveform from '$lib/components/common/RecordingWaveform.svelte';
-	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		recorder: AudioRecorder;
@@ -49,49 +48,78 @@
 	});
 </script>
 
-<!-- UI -->
-<div class="flex min-h-screen flex-col items-center justify-center bg-background p-8">
-	<div class="mb-8 w-full max-w-4xl">
-		<!-- Waveform -->
-		<div class=" mt-4 h-[210px] w-full overflow-hidden text-card-foreground">
-			<RecordingWaveform {bars} barWidth={2} gap={1} />
+<div class="flex flex-1 flex-col items-center justify-center bg-background p-6 sm:p-12">
+	<div class="w-full max-w-3xl">
+		<!-- Status Header -->
+		<div class="mb-12 flex items-center justify-between border-b border-muted/30 pb-8">
+			<div class="flex items-center gap-4">
+				<div class="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
+					<Mic class="h-5 w-5" />
+				</div>
+				<div>
+					<span class="block text-xs font-bold text-secondary">Session</span>
+					<div class="flex items-center gap-2">
+						{#if isPaused}
+							<span class="text-sm font-semibold text-secondary">Paused</span>
+						{:else}
+							<div class="h-2 w-2 animate-pulse rounded-full bg-red-500"></div>
+							<span class="text-sm font-semibold text-foreground">Live Recording</span>
+						{/if}
+					</div>
+				</div>
+			</div>
+			<div class="text-right">
+				<span class="block text-xs font-bold text-secondary">Elapsed</span>
+				<span class="font-mono text-2xl font-bold text-foreground">{elapsedString}</span>
+			</div>
 		</div>
-	</div>
 
-	<!-- Timer + Controls -->
-	<div class="flex items-center gap-4">
-		<div
-			class="flex items-center gap-3 rounded-full bg-secondary px-3 py-2 text-secondary-foreground shadow-sm"
-		>
-			<Button
-				variant="destructive"
-				size="icon-sm"
-				class="rounded-full"
+		<!-- Waveform Container -->
+		<div class="relative mb-12 rounded-lg border border-muted bg-card p-10 shadow-xl shadow-muted/20">
+			<div class="h-48 w-full overflow-hidden">
+				<RecordingWaveform {bars} barWidth={3} gap={2} />
+			</div>
+			
+			<!-- Decorative Grid Lines -->
+			<div class="absolute inset-0 pointer-events-none flex flex-col justify-between p-6 opacity-[0.03]">
+				{#each Array(6) as _}
+					<div class="w-full border-t border-foreground"></div>
+				{/each}
+			</div>
+		</div>
+
+		<!-- Controls -->
+		<div class="flex items-center justify-center gap-8">
+			<button
+				onclick={() => {
+					onPauseResume(isPaused);
+				}}
+				class="flex h-16 w-16 items-center justify-center rounded-2xl border border-primary bg-card text-primary transition-all hover:bg-muted/5 active:scale-95"
+				aria-label={isPaused ? 'Resume' : 'Pause'}
+			>
+				{#if isPaused}
+					<Play class="h-7 w-7 fill-current" />
+				{:else}
+					<Pause class="h-7 w-7 fill-current" />
+				{/if}
+			</button>
+
+			<button
 				onclick={() => {
 					recorder.stop();
 					waveEngine.stop();
 				}}
+				class="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500 text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95"
+				aria-label="Stop and Save"
 			>
-				<Square class="size-4" fill="currentColor" />
-			</Button>
-
-			<span class="text-sm font-medium">{elapsedString}</span>
+				<Square class="h-7 w-7 fill-current" />
+			</button>
 		</div>
-
-		<Button
-			variant={isPaused ? 'outline' : 'default'}
-			size="icon-lg"
-			class="rounded-full shadow-md"
-			onclick={() => {
-				onPauseResume(isPaused);
-				// The effect above will call waveEngine.pause() or resume()
-			}}
-		>
-			{#if isPaused}
-				<Play class="size-5 animate-pulse" fill="currentColor" />
-			{:else}
-				<Pause class="size-5" fill="currentColor" />
-			{/if}
-		</Button>
+		
+		<div class="mt-16 text-center">
+			<p class="text-xs font-bold text-secondary">
+				Finalize recording to start editing
+			</p>
+		</div>
 	</div>
 </div>

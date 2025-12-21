@@ -126,29 +126,35 @@ export class AudioWaveformRenderer extends EventEmitter<AudioWaveformRenderEvent
 		const center = canvas.height / 2;
 		const barWidth = canvas.width / this.peaks.length;
 
-		// baseline
-		ctx.fillStyle = 'rgba(100, 116, 139, 0.3)';
+		// baseline - soft blue-gray
+		ctx.fillStyle = '#DDE6ED';
 		ctx.fillRect(0, Math.round(center), canvas.width, 1);
 
+		const progressPercent = this.duration > 0 ? currentTime / this.duration : 0;
+
 		// waveform bars
-		ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
 		for (let i = 0; i < this.peaks.length; i++) {
 			const amp = this.peaks[i];
 			const barHeight = amp * center;
+			const barX = i * barWidth;
+
+			// Color based on progress: played (Deep Slate) vs unplayed (Muted Blue-Gray)
+			ctx.fillStyle = i / this.peaks.length <= progressPercent ? '#27374D' : '#9DB2BF';
+
 			ctx.fillRect(
-				Math.floor(i * barWidth),
+				Math.floor(barX),
 				Math.round(center - barHeight),
 				Math.ceil(barWidth),
 				Math.round(barHeight * 2)
 			);
 		}
 
-		// progress line (always draw if duration > 0)
+		// progress line - Deep Slate
 		if (this.duration > 0) {
-			const progressX = (currentTime / this.duration) * canvas.width;
+			const progressX = progressPercent * canvas.width;
 			const clampedX = Math.min(canvas.width - 1, Math.max(0, progressX));
 
-			ctx.fillStyle = '#3b82f6';
+			ctx.fillStyle = '#27374D';
 			ctx.fillRect(Math.round(clampedX), 0, 1, canvas.height);
 		}
 	}
