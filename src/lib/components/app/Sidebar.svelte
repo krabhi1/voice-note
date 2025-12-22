@@ -1,10 +1,16 @@
 <script lang="ts">
-	import { Mic, LayoutGrid, EllipsisVertical, LogOut } from '@lucide/svelte';
+	import { Mic, LayoutGrid, EllipsisVertical, LogOut, X } from '@lucide/svelte';
 	import { page } from '$app/state';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { goto } from '$app/navigation';
 	import { client, useSession } from '$lib/auth-client';
 	import { Skeleton } from '@/components/ui/skeleton';
+
+	interface Props {
+		onNavItemClick?: () => void;
+	}
+
+	let { onNavItemClick }: Props = $props();
 
 	const session = useSession();
 	const user = $derived($session.data?.user);
@@ -27,9 +33,9 @@
 	const signOut = () => client.signOut({ fetchOptions: { onSuccess: () => goto('/') } });
 </script>
 
-<aside class="flex h-full w-64 flex-col border-r border-muted bg-card">
-	<div class="flex h-14 items-center border-b border-muted/30 px-6">
-		<a href="/app" class="flex items-center gap-2.5">
+<aside class="flex h-full w-64 flex-col border-r border-muted bg-card shadow-2xl lg:shadow-none">
+	<div class="flex h-14 items-center justify-between border-b border-muted/30 px-6">
+		<a href="/app" class="flex items-center gap-2.5" onclick={onNavItemClick}>
 			<div
 				class="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground"
 			>
@@ -37,6 +43,14 @@
 			</div>
 			<span class="text-base font-bold tracking-tight">VoiceNote</span>
 		</a>
+
+		<button
+			onclick={onNavItemClick}
+			class="flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted/20 lg:hidden"
+			aria-label="Close menu"
+		>
+			<X class="h-4 w-4 text-secondary" />
+		</button>
 	</div>
 
 	<nav class="flex-1 space-y-1 px-3 py-6">
@@ -45,6 +59,7 @@
 			{@const active = path === item.href}
 			<a
 				href={item.href}
+				onclick={onNavItemClick}
 				class="group flex items-center justify-between rounded-md px-3 py-2 transition-colors {active
 					? 'bg-primary text-primary-foreground'
 					: 'text-secondary hover:bg-muted/20 hover:text-foreground'}"
