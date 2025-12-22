@@ -76,9 +76,9 @@
 	<div class="border-t border-muted/30 p-4">
 		{#if $session.isPending || !user}
 			<div class="flex items-center gap-3 px-2">
-				<Skeleton class="h-8 w-8 rounded-md bg-muted/20" />
+				<Skeleton class="h-8 w-8 rounded-md" />
 				<div class="space-y-1.5">
-					<Skeleton class="h-3 w-20 bg-muted/20" /><Skeleton class="h-2 w-12 bg-muted/20" />
+					<Skeleton class="h-3 w-20 " /><Skeleton class="h-2 w-12 " />
 				</div>
 			</div>
 		{:else}

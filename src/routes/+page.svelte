@@ -26,9 +26,6 @@
 							</Button>
 						</a>
 					{:else}
-						<a href="/login" class="text-sm font-bold text-secondary hover:text-primary transition-colors">
-							Sign In
-						</a>
 						<a href="/login">
 							<Button size="sm" class="bg-primary text-primary-foreground hover:bg-primary/90">
 								Get Started
