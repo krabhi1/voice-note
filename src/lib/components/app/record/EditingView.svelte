@@ -3,14 +3,14 @@
 	import type { AudioData } from '$lib/types';
 	import { formatDuration } from '$lib/utils';
 	import { onMount } from 'svelte';
-	import WaveSurfer from 'wavesurfer.js';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Spinner } from '@/components/ui/spinner';
 	import { superForm } from 'sveltekit-superforms';
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 	import { uploadSchema } from '@/schemas';
-	import { WAVEFORM_CONFIG } from '$lib/audio/config';
+	import AudioWaveform from '$lib/components/common/AudioWaveform.svelte';
+	import type WaveSurfer from 'wavesurfer.js';
 
 	interface Props {
 		audioData: AudioData;
@@ -40,36 +40,13 @@
 	let currentTime = $state(0);
 	let isReady = $state(false);
 	let showUnsavedDialog = $state(false);
-
-	let container = $state<HTMLDivElement | null>(null);
-	let wavesurfer: WaveSurfer;
+	let wavesurfer = $state<WaveSurfer | null>(null);
+	let audioUrl = $state('');
 
 	onMount(() => {
 		$form.name = $form.name || 'New Recording';
-		if (!container) return;
-
-		const url = URL.createObjectURL(audioData.file);
-		wavesurfer = WaveSurfer.create({
-			...WAVEFORM_CONFIG,
-			container,
-			url
-		});
-
-		wavesurfer.on('ready', () => (isReady = true));
-		wavesurfer.on('audioprocess', (time) => (currentTime = time));
-		wavesurfer.on('interaction', () => (currentTime = wavesurfer.getCurrentTime()));
-		wavesurfer.on('play', () => (isPlaying = true));
-		wavesurfer.on('pause', () => (isPlaying = false));
-		wavesurfer.on('finish', () => {
-			isPlaying = false;
-			wavesurfer.seekTo(0);
-			currentTime = 0;
-		});
-
-		return () => {
-			wavesurfer.destroy();
-			URL.revokeObjectURL(url);
-		};
+		audioUrl = URL.createObjectURL(audioData.file);
+		return () => URL.revokeObjectURL(audioUrl);
 	});
 
 	const metadata = $derived([
@@ -84,7 +61,9 @@
 		<div class="mx-auto max-w-5xl flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
 			<div class="flex-1">
 				<div class="mb-2 flex items-center gap-2">
-					<span class="text-[10px] font-bold uppercase tracking-wider text-secondary sm:text-xs">Review & Save</span>
+					<span class="text-[10px] font-bold uppercase tracking-wider text-secondary sm:text-xs"
+						>Review & Save</span
+					>
 					<div class="h-px w-8 bg-muted/30"></div>
 				</div>
 				<div class="relative max-w-md">
@@ -92,7 +71,9 @@
 						type="text"
 						bind:value={$form.name}
 						placeholder="Recording Name"
-						class="w-full border-b-2 border-muted/30 bg-transparent py-1 text-2xl font-bold tracking-tight text-foreground transition-colors outline-none focus:border-primary sm:text-3xl {$errors?.name ? 'border-red-500' : ''}"
+						class="w-full border-b-2 border-muted/30 bg-transparent py-1 text-2xl font-bold tracking-tight text-foreground transition-colors outline-none focus:border-primary sm:text-3xl {$errors?.name
+							? 'border-red-500'
+							: ''}"
 					/>
 					{#if $errors?.name}
 						<p class="absolute -bottom-5 left-0 text-xs font-bold text-red-500">{$errors.name}</p>
@@ -107,9 +88,17 @@
 				>
 					<X class="h-3.5 w-3.5" /> Discard
 				</button>
-				<form method="POST" action="?/uploadVoice" enctype="multipart/form-data" use:enhance class="flex-1 sm:flex-none">
+				<form
+					method="POST"
+					action="?/uploadVoice"
+					enctype="multipart/form-data"
+					use:enhance
+					class="flex-1 sm:flex-none"
+				>
 					<Button type="submit" disabled={$submitting} class="h-10 w-full px-6 text-xs font-bold sm:w-auto">
-						{#if $submitting}<Spinner class="mr-2 h-3.5 w-3.5" />Saving...{:else}<Save class="mr-2 h-3.5 w-3.5" />Save Recording{/if}
+						{#if $submitting}<Spinner class="mr-2 h-3.5 w-3.5" />Saving...{:else}<Save
+								class="mr-2 h-3.5 w-3.5"
+							/>Save Recording{/if}
 					</Button>
 				</form>
 			</div>
@@ -121,32 +110,59 @@
 			<div class="relative rounded-lg border border-muted bg-card p-6 shadow-xl shadow-muted/20 sm:p-10">
 				<div class="mb-6 flex items-center justify-between">
 					<div class="flex items-center gap-3 sm:gap-4">
-						<div class="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+						<div
+							class="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground"
+						>
 							<Mic class="h-4 w-4" />
 						</div>
-						<span class="text-[10px] font-bold uppercase tracking-wider text-foreground sm:text-xs">Audio Timeline</span>
-					</div>
-					<div class="flex items-center gap-4 text-right sm:gap-6">
-						<div>
-							<span class="block text-[10px] font-bold text-secondary sm:text-xs">Current</span>
-							<span class="font-mono text-xs font-bold text-foreground">{formatDuration(currentTime)}</span>
-						</div>
-						<div>
-							<span class="block text-[10px] font-bold text-secondary sm:text-xs">Total</span>
-							<span class="font-mono text-xs font-bold text-foreground">{formatDuration(audioData.duration)}</span>
-						</div>
+						<span class="text-[10px] font-bold uppercase tracking-wider text-foreground sm:text-xs"
+							>Audio Timeline</span
+						>
 					</div>
 				</div>
 
-				<div class="relative h-32 w-full overflow-hidden rounded-md border border-muted/30 bg-background sm:h-48">
-					<div bind:this={container} class="h-full w-full cursor-pointer"></div>
+				<div
+					class="relative h-32 w-full overflow-hidden rounded-md border border-muted/30 bg-background sm:h-48"
+				>
+					{#if audioUrl}
+						<AudioWaveform
+							bind:wavesurfer
+							url={audioUrl}
+							onReady={() => (isReady = true)}
+							onTimeUpdate={(t) => (currentTime = t)}
+							onInteraction={(t) => (currentTime = t)}
+							onPlay={() => (isPlaying = true)}
+							onPause={() => (isPlaying = false)}
+							onFinish={() => {
+								isPlaying = false;
+								wavesurfer?.seekTo(0);
+								currentTime = 0;
+							}}
+						/>
+					{/if}
 					{#if !isReady}
-						<div class="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+						<div
+							class="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm"
+						>
 							<Loader2 class="h-6 w-6 animate-spin text-secondary" />
 						</div>
 					{/if}
 					<div class="pointer-events-none absolute inset-0 flex flex-col justify-between p-4 opacity-[0.02]">
 						{#each Array(4) as _}<div class="w-full border-t border-foreground"></div>{/each}
+					</div>
+				</div>
+
+				<!-- Current/Total Labels at bottom of waveform container -->
+				<div class="mt-3 flex items-center justify-between px-1">
+					<div class="text-left">
+						<span class="block text-[10px] font-bold text-secondary sm:text-xs">Current</span>
+						<span class="font-mono text-xs font-bold text-foreground">{formatDuration(currentTime)}</span>
+					</div>
+					<div class="text-right">
+						<span class="block text-[10px] font-bold text-secondary sm:text-xs">Total</span>
+						<span class="font-mono text-xs font-bold text-foreground"
+							>{formatDuration(audioData.duration)}</span
+						>
 					</div>
 				</div>
 
@@ -157,7 +173,9 @@
 						class="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary transition-all hover:bg-primary/20 active:scale-95 disabled:opacity-30 sm:h-16 sm:w-16"
 						aria-label={isPlaying ? 'Pause' : 'Play'}
 					>
-						{#if isPlaying}<Pause class="h-6 w-6 fill-current sm:h-7 sm:w-7" />{:else}<Play class="h-6 w-6 fill-current sm:h-7 sm:w-7" />{/if}
+						{#if isPlaying}<Pause class="h-6 w-6 fill-current sm:h-7 sm:w-7" />{:else}<Play
+								class="h-6 w-6 fill-current sm:h-7 sm:w-7"
+							/>{/if}
 					</button>
 				</div>
 			</div>
@@ -165,10 +183,14 @@
 			<div class="mt-8 grid grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-3 sm:gap-6">
 				{#each metadata as item}
 					<div class="rounded-lg border border-muted bg-card p-5 sm:p-6">
-						<div class="mb-4 flex h-8 w-8 items-center justify-center rounded-md bg-muted/20 text-secondary">
+						<div
+							class="mb-4 flex h-8 w-8 items-center justify-center rounded-md bg-muted/20 text-secondary"
+						>
 							<item.icon class="h-4 w-4" />
 						</div>
-						<h3 class="text-[10px] font-bold uppercase tracking-wider text-foreground sm:text-xs">{item.label}</h3>
+						<h3 class="text-[10px] font-bold uppercase tracking-wider text-foreground sm:text-xs">
+							{item.label}
+						</h3>
 						<p class="mt-2 font-mono text-xs text-secondary">{item.value}</p>
 					</div>
 				{/each}
@@ -186,8 +208,14 @@
 			</Dialog.Description>
 		</Dialog.Header>
 		<Dialog.Footer class="mt-6 flex flex-col gap-3 sm:flex-row">
-			<Button variant="outline" onclick={() => (showUnsavedDialog = false)} class="w-full text-xs font-bold sm:w-auto">Cancel</Button>
-			<Button variant="destructive" onclick={onClose} class="w-full text-xs font-bold sm:w-auto">Discard Session</Button>
+			<Button
+				variant="outline"
+				onclick={() => (showUnsavedDialog = false)}
+				class="w-full text-xs font-bold sm:w-auto">Cancel</Button
+			>
+			<Button variant="destructive" onclick={onClose} class="w-full text-xs font-bold sm:w-auto"
+				>Discard Session</Button
+			>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>
