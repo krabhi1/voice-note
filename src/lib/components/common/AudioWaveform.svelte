@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import WaveSurfer from 'wavesurfer.js';
+	import WaveSurfer, { type WaveSurferOptions } from 'wavesurfer.js';
 	import { WAVEFORM_CONFIG } from '$lib/audio/config';
 
 	interface Props {
@@ -38,7 +38,7 @@
 		initId = requestAnimationFrame(() => {
 			if (!container) return;
 
-			const wsOptions: any = {
+			const wsOptions: WaveSurferOptions = {
 				...WAVEFORM_CONFIG,
 				container,
 				height: container.clientHeight

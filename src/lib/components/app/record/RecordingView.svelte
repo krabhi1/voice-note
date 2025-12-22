@@ -16,7 +16,7 @@
 	let { onRecordEnd, onCancel }: Props = $props();
 
 	let wavesurfer = $state<WaveSurfer | null>(null);
-	let recordPlugin: any;
+	let recordPlugin: RecordPlugin;
 	let micStream: MediaStream | null = null;
 
 	let isPaused = $state(false);
