@@ -139,7 +139,7 @@
 					<button
 						onclick={() => wavesurfer?.skip(-skipAmount)}
 						disabled={!isReady}
-						class="group relative flex h-12 w-12 items-center justify-center rounded-2xl border border-muted bg-card text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-30"
+						class="group relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary/10 text-secondary transition-colors hover:bg-secondary/20 disabled:opacity-30"
 						aria-label="Skip back {skipAmount} seconds"
 					>
 						<SkipBack class="h-5 w-5" />
@@ -152,7 +152,7 @@
 					<button
 						onclick={() => wavesurfer?.playPause()}
 						disabled={!isReady}
-						class="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50"
+						class="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50"
 					>
 						{#if !isReady}<Loader2 class="h-8 w-8 animate-spin" />{:else if isPlaying}<Pause
 								class="h-8 w-8 fill-current"
@@ -162,7 +162,7 @@
 					<button
 						onclick={() => wavesurfer?.skip(skipAmount)}
 						disabled={!isReady}
-						class="group relative flex h-12 w-12 items-center justify-center rounded-2xl border border-muted bg-card text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-30"
+						class="group relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary/10 text-secondary transition-colors hover:bg-secondary/20 disabled:opacity-30"
 						aria-label="Skip forward {skipAmount} seconds"
 					>
 						<SkipForward class="h-5 w-5" />
@@ -180,7 +180,7 @@
 						</button>
 						<input type="range" min="0" max="1" step="0.01" value={isMuted ? 0 : volume} oninput={handleVolumeChange} class="h-0.5 w-24 cursor-pointer appearance-none bg-muted/30 accent-primary" />
 					</div>
-					<button onclick={togglePlaybackRate} class="flex h-7 w-12 items-center justify-center rounded-md border border-muted/30 bg-muted/5 text-[10px] font-bold text-secondary hover:border-primary hover:text-primary transition-all">
+					<button onclick={togglePlaybackRate} class="flex h-7 w-12 items-center justify-center rounded-full bg-muted/5 text-[10px] font-bold text-secondary hover:bg-muted/10 hover:text-primary transition-all">
 						{playbackRate}x
 					</button>
 				</div>

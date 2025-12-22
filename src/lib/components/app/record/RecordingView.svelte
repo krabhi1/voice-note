@@ -111,7 +111,7 @@
 		<div class="flex items-center justify-center gap-8">
 			<button
 				onclick={() => (isPaused ? recordPlugin.resumeRecording() : recordPlugin.pauseRecording())}
-				class="flex h-16 w-16 items-center justify-center rounded-md border bg-card text-foreground transition-all hover:border-primary active:scale-95"
+				class="flex h-16 w-16 items-center justify-center rounded-full bg-secondary/10 text-foreground transition-all hover:bg-secondary/20 active:scale-95"
 				aria-label={isPaused ? 'Resume' : 'Pause'}
 			>
 				{#if isPaused}<Play class="h-7 w-7 fill-current" />{:else}<Pause class="h-7 w-7 fill-current" />{/if}
@@ -119,7 +119,7 @@
 
 			<button
 				onclick={() => recordPlugin.stopRecording()}
-				class="flex h-16 w-16 items-center justify-center rounded-md bg-red-500 text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95"
+				class="flex h-16 w-16 items-center justify-center rounded-full bg-red-500 text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95"
 				aria-label="Stop and Save"
 			>
 				<Square class="h-7 w-7 fill-current" />

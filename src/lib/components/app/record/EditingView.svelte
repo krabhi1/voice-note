@@ -154,7 +154,7 @@
 					<button
 						onclick={() => wavesurfer?.playPause()}
 						disabled={!isReady}
-						class="flex h-16 w-16 items-center justify-center rounded-md border bg-card text-foreground transition-all hover:border-primary active:scale-95 disabled:opacity-30"
+						class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary transition-all hover:bg-primary/20 active:scale-95 disabled:opacity-30"
 						aria-label={isPlaying ? 'Pause' : 'Play'}
 					>
 						{#if isPlaying}<Pause class="h-6 w-6 fill-current" />{:else}<Play class="h-6 w-6 fill-current" />{/if}
