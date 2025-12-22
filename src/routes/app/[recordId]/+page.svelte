@@ -14,7 +14,7 @@
 		FileAudio,
 		ChevronLeft
 	} from '@lucide/svelte';
-	import { formatDuration } from '$lib/utils';
+	import { formatDuration, formatSize } from '$lib/utils';
 	import AudioWaveform from '$lib/components/common/AudioWaveform.svelte';
 	import type WaveSurfer from 'wavesurfer.js';
 
@@ -57,9 +57,9 @@
 	});
 
 	const metadata = $derived([
-		{ icon: Clock, label: 'Duration', value: `${duration.toFixed(2)}s` },
-		{ icon: Mic, label: 'Source', value: 'Web Browser Audio' },
-		{ icon: FileAudio, label: 'File Type', value: 'MP3 / MPEG-4' }
+		{ icon: Clock, label: 'Duration', value: formatDuration(duration) },
+		{ icon: FileAudio, label: 'File Type', value: data.recording.content_type },
+		{ icon: Mic, label: 'Size', value: formatSize(data.recording.size) }
 	]);
 </script>
 
@@ -69,25 +69,24 @@
 			<div class="mb-4 sm:mb-6">
 				<a
 					href="/app"
-					class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-secondary transition-colors hover:text-primary sm:text-xs"
+					class="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider text-secondary uppercase transition-colors hover:text-primary sm:text-xs"
 				>
 					<ChevronLeft class="h-3.5 w-3.5" /> Back to Library
 				</a>
 			</div>
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 				<div>
-					<div class="mb-2 flex items-center gap-2">
-						<span class="text-[10px] font-bold uppercase tracking-wider text-secondary sm:text-xs"
-							>Playback</span
-						>
-						<div class="h-px w-8 bg-muted/30"></div>
-						<span class="font-mono text-[10px] font-bold text-secondary sm:text-xs"
-							>ID: {data.recording.id.slice(0, 8)}</span
-						>
-					</div>
-					<h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+					<h1 class="mb-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
 						{data.recording.title || 'Untitled Recording'}
 					</h1>
+					<div class="flex flex-wrap gap-x-4 gap-y-2">
+						{#each metadata as item}
+							<div class="flex items-center gap-1.5 text-secondary">
+								<item.icon class="h-3 w-3" />
+								<span class="text-[10px] font-bold tracking-wider uppercase">{item.value}</span>
+							</div>
+						{/each}
+					</div>
 				</div>
 				<div
 					class="flex w-fit items-center gap-2 rounded-md border border-muted/30 bg-card px-3 py-1.5"
@@ -105,7 +104,9 @@
 
 	<div class="flex-1 overflow-auto px-4 py-8 sm:px-10 sm:py-12">
 		<div class="mx-auto max-w-5xl">
-			<div class="relative rounded-lg border border-muted bg-card p-6 shadow-xl shadow-muted/20 sm:p-10">
+			<div
+				class="relative rounded-lg border border-muted bg-card p-6 shadow-xl shadow-muted/20 sm:p-10"
+			>
 				<div class="mb-8 flex items-center justify-between">
 					<div class="flex items-center gap-3 sm:gap-4">
 						<div
@@ -113,14 +114,14 @@
 						>
 							<FileAudio class="h-4 w-4" />
 						</div>
-						<span class="text-[10px] font-bold uppercase tracking-wider text-foreground sm:text-xs"
+						<span class="text-[10px] font-bold tracking-wider text-foreground uppercase sm:text-xs"
 							>Audio Stream</span
 						>
 					</div>
 				</div>
 
 				<div
-					class="relative h-24 w-full overflow-hidden rounded-md border border-muted/30 bg-background sm:h-32"
+					class="relative h-40 w-full overflow-hidden border border-muted/30 bg-background sm:h-50"
 				>
 					<AudioWaveform
 						bind:wavesurfer
@@ -143,7 +144,7 @@
 						</div>
 					{/if}
 					<div
-						class="absolute inset-0 -z-10 pointer-events-none flex flex-col justify-between p-4 opacity-[0.03]"
+						class="pointer-events-none absolute inset-0 -z-10 flex flex-col justify-between p-4 opacity-[0.03]"
 					>
 						{#each Array(4) as _}<div class="w-full border-t border-foreground"></div>{/each}
 					</div>
@@ -184,9 +185,11 @@
 						disabled={!isReady}
 						class="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 sm:h-20 sm:w-20"
 					>
-						{#if !isReady}<Loader2 class="h-6 w-6 animate-spin sm:h-8 sm:w-8" />{:else if isPlaying}<Pause
-								class="h-6 w-6 fill-current sm:h-8 sm:w-8"
-							/>{:else}<Play class="h-6 w-6 fill-current ml-1 sm:h-8 sm:w-8" />{/if}
+						{#if !isReady}<Loader2
+								class="h-6 w-6 animate-spin sm:h-8 sm:w-8"
+							/>{:else if isPlaying}<Pause class="h-6 w-6 fill-current sm:h-8 sm:w-8" />{:else}<Play
+								class="ml-1 h-6 w-6 fill-current sm:h-8 sm:w-8"
+							/>{/if}
 					</button>
 
 					<button
@@ -207,7 +210,10 @@
 					class="mt-10 flex flex-col items-center justify-center gap-6 sm:mt-12 sm:flex-row sm:gap-8"
 				>
 					<div class="flex w-full items-center justify-center gap-4 sm:w-auto">
-						<button onclick={toggleMute} class="text-secondary hover:text-primary transition-colors">
+						<button
+							onclick={toggleMute}
+							class="text-secondary transition-colors hover:text-primary"
+						>
 							{#if isMuted || volume === 0}<VolumeX class="h-4 w-4" />{:else}<Volume2
 									class="h-4 w-4"
 								/>{/if}
@@ -229,22 +235,6 @@
 						{playbackRate}x
 					</button>
 				</div>
-			</div>
-
-			<div class="mt-8 grid grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-3 sm:gap-6">
-				{#each metadata as item}
-					<div class="rounded-lg border border-muted/30 bg-card/50 p-5 backdrop-blur-sm sm:p-6">
-						<div
-							class="mb-4 flex h-8 w-8 items-center justify-center rounded-md bg-muted/20 text-secondary"
-						>
-							<item.icon class="h-4 w-4" />
-						</div>
-						<h3 class="text-[10px] font-bold uppercase tracking-wider text-foreground sm:text-xs">
-							{item.label}
-						</h3>
-						<p class="mt-2 font-mono text-xs text-secondary">{item.value}</p>
-					</div>
-				{/each}
 			</div>
 		</div>
 	</div>

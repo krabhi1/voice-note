@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { X, Play, Pause, Save, Mic, Clock, FileText, Loader2 } from '@lucide/svelte';
 	import type { AudioData } from '$lib/types';
-	import { formatDuration } from '$lib/utils';
+	import { formatDuration, formatSize } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -50,9 +50,9 @@
 	});
 
 	const metadata = $derived([
-		{ icon: Clock, label: 'Duration', value: `${audioData.duration.toFixed(2)}s` },
+		{ icon: Clock, label: 'Duration', value: formatDuration(audioData.duration) },
 		{ icon: FileText, label: 'Format', value: audioData.file.type || 'audio/mpeg' },
-		{ icon: Save, label: 'Size', value: `${(audioData.file.size / 1024).toFixed(1)} KB` }
+		{ icon: Save, label: 'Size', value: formatSize(audioData.file.size) }
 	]);
 </script>
 
@@ -78,6 +78,14 @@
 					{#if $errors?.name}
 						<p class="absolute -bottom-5 left-0 text-xs font-bold text-red-500">{$errors.name}</p>
 					{/if}
+				</div>
+				<div class="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+					{#each metadata as item}
+						<div class="flex items-center gap-1.5 text-secondary">
+							<item.icon class="h-3 w-3" />
+							<span class="text-[10px] font-bold uppercase tracking-wider">{item.value}</span>
+						</div>
+					{/each}
 				</div>
 			</div>
 
@@ -180,21 +188,7 @@
 				</div>
 			</div>
 
-			<div class="mt-8 grid grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-3 sm:gap-6">
-				{#each metadata as item}
-					<div class="rounded-lg border border-muted bg-card p-5 sm:p-6">
-						<div
-							class="mb-4 flex h-8 w-8 items-center justify-center rounded-md bg-muted/20 text-secondary"
-						>
-							<item.icon class="h-4 w-4" />
-						</div>
-						<h3 class="text-[10px] font-bold uppercase tracking-wider text-foreground sm:text-xs">
-							{item.label}
-						</h3>
-						<p class="mt-2 font-mono text-xs text-secondary">{item.value}</p>
-					</div>
-				{/each}
-			</div>
+
 		</div>
 	</div>
 </div>
