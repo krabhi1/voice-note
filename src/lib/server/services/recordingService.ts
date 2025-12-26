@@ -9,15 +9,23 @@ export class RecordingService {
 		private storageService: StorageService
 	) {}
 
-	async createRecording(file: File, duration: number, userId: string, name: string) {
-		const file_url = await this.storageService.uploadRecording(file, userId);
+
+
+	async createRecordingFromKey(
+		fileKey: string,
+		duration: number,
+		userId: string,
+		name: string,
+		contentType: string,
+		size: number
+	) {
 		return this.recordingRepository.create({
 			title: name,
 			duration,
-			file_url,
+			file_url: fileKey,
 			userId,
-			content_type: file.type,
-			size: file.size
+			content_type: contentType,
+			size
 		});
 	}
 

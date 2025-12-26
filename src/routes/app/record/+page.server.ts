@@ -14,8 +14,15 @@ export const actions = {
 		if (!form.valid) return message(form, 'Invalid input');
 
 		try {
-			const { 'voice-note': file, duration, name } = form.data;
-			await services.recordingService.createRecording(file, duration, user.id, name);
+			const { fileKey, duration, name, contentType, size } = form.data;
+			await services.recordingService.createRecordingFromKey(
+				fileKey,
+				duration,
+				user.id,
+				name,
+				contentType,
+				size
+			);
 			return message(form, 'Uploaded');
 		} catch (e) {
 			return handleError(e);

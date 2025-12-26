@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 const uploadSchema = z.object({
-	'voice-note': z
-		.instanceof(File, { message: 'A file is required.' })
-		.refine((file) => file.size > 0, 'File cannot be empty.'),
+	fileKey: z.string().min(1, 'File key is required.'),
+	contentType: z.string().min(1, 'Content type is required.'),
+	size: z.coerce.number().positive('Size must be positive.'),
 	duration: z.coerce.number().positive('Duration must be positive.'),
 	name: z.string().min(1, 'Name is required.')
 });

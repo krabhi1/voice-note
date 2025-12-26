@@ -2,7 +2,7 @@
 
 import { nanoid } from 'nanoid';
 import { env } from '$env/dynamic/private';
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export class StorageService {
@@ -20,10 +20,9 @@ export class StorageService {
 		});
 	}
 
-	async uploadRecording(file: File, userId: string): Promise<string> {
-		const timestamp = Date.now();
+	private getFileKey(userId: string, fileName: string, contentType: string): string {
 		let extension = 'bin';
-		const mimePart = file.type.split('/')[1] || file.type;
+		const mimePart = contentType.split('/')[1] || contentType;
 		const mimeMap: Record<string, string> = {
 			mpeg: 'mp3',
 			'x-wav': 'wav',
@@ -35,17 +34,7 @@ export class StorageService {
 			flac: 'flac'
 		};
 		extension = (mimeMap[mimePart] ?? mimePart).toLowerCase();
-		const fileKey = `users/${userId}/audio/recordings/${nanoid()}/${file.name}.${extension}`;
-
-		const result = await this.bucket.put(fileKey, file, {
-			httpMetadata: { contentType: file.type },
-			customMetadata: {
-				userId,
-				originalName: file.name,
-				createdAt: new Date().toISOString()
-			}
-		});
-		return result.key;
+		return `users/${userId}/audio/recordings/${nanoid()}/${fileName}.${extension}`;
 	}
 
 	async get(fileKey: string) {
@@ -71,5 +60,26 @@ export class StorageService {
 			}),
 			{ expiresIn: expiresInSeconds }
 		);
+	}
+
+	async generatePresignedUploadUrl(
+		userId: string,
+		fileName: string,
+		contentType: string,
+		expiresInSeconds = 60
+	): Promise<{ uploadUrl: string; fileKey: string }> {
+		const fileKey = this.getFileKey(userId, fileName, contentType);
+
+		const uploadUrl = await getSignedUrl(
+			this.s3Client,
+			new PutObjectCommand({
+				Bucket: env.CLOUDFLARE_R2_BUCKET_NAME,
+				Key: fileKey,
+				ContentType: contentType
+			}),
+			{ expiresIn: expiresInSeconds }
+		);
+
+		return { uploadUrl, fileKey };
 	}
 }

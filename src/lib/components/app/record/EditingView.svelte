@@ -24,10 +24,44 @@
 	let { audioData, onClose, onSaveSuccess, onSaveError, form: _form }: Props = $props();
 
 	const { form, errors, enhance, message, submitting } = superForm(_form, {
-		onSubmit: ({ formData }) => {
-			formData.set('voice-note', audioData.file, $form.name);
-			formData.set('duration', String(audioData.duration * 1000));
-			formData.set('name', $form.name);
+		onSubmit: async ({ formData, cancel }) => {
+			try {
+				// 1. Get presigned URL
+				const urlResponse = await fetch('/app/upload/url', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+					body: JSON.stringify({
+						fileName: $form.name,
+						contentType: audioData.file.type
+					})
+				});
+
+				if (!urlResponse.ok) throw new Error('Failed to get upload URL');
+				const { uploadUrl, fileKey } = (await urlResponse.json()) as {
+					uploadUrl: string;
+					fileKey: string;
+				};
+
+				// 2. Upload directly to R2
+				const uploadResponse = await fetch(uploadUrl, {
+					method: 'PUT',
+					headers: { 'Content-Type': audioData.file.type },
+					body: audioData.file
+				});
+
+				if (!uploadResponse.ok) throw new Error('Failed to upload to storage');
+
+				// 3. Prepare form data for DB record creation
+				formData.set('fileKey', fileKey);
+				formData.set('contentType', audioData.file.type);
+				formData.set('size', String(audioData.file.size));
+				formData.set('duration', String(Math.round(audioData.duration * 1000)));
+				formData.set('name', $form.name);
+			} catch (err) {
+				cancel();
+				onSaveError(err instanceof Error ? err.message : 'Upload failed');
+			}
 		},
 		onResult: ({ result }) => {
 			if (result.type === 'failure') onSaveError($message?.text || 'Save failed');
