@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { sleep } from '$lib/utils';
 	import type { AudioData } from '$lib/types';
 	import RecordingView from '$lib/components/app/record/RecordingView.svelte';
-	import ProcessingView from '$lib/components/app/record/ProcessingView.svelte';
 	import EditingView from '$lib/components/app/record/EditingView.svelte';
 	import { Mic } from '@lucide/svelte';
 	import { Button } from '@/components/ui/button';
@@ -12,15 +10,13 @@
 
 	let { data }: PageProps = $props();
 
-	let status = $state<'idle' | 'recording' | 'processing' | 'editing'>('idle');
+	let status = $state<'idle' | 'recording' | 'editing'>('idle');
 	let audioData = $state<AudioData | null>(null);
 
 	const exit = () => goto('/app');
 
 	async function handleRecordEnd(data: AudioData) {
 		audioData = data;
-		status = 'processing';
-		await sleep(1500);
 		status = 'editing';
 	}
 </script>
@@ -46,8 +42,6 @@
 		</div>
 	{:else if status === 'recording'}
 		<RecordingView onRecordEnd={handleRecordEnd} onCancel={() => (status = 'idle')} />
-	{:else if status === 'processing'}
-		<ProcessingView elapsedSeconds={audioData?.duration || 0} />
 	{:else if status === 'editing' && audioData}
 		<EditingView
 			{audioData}

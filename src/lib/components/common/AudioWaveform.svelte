@@ -6,6 +6,7 @@
 	interface Props {
 		wavesurfer?: WaveSurfer | null;
 		url?: string;
+		duration?: number;
 		mode?: 'playback' | 'live';
 		onReady?: () => void;
 		onPlay?: () => void;
@@ -18,6 +19,7 @@
 	let {
 		wavesurfer = $bindable(null),
 		url,
+		duration,
 		mode = 'playback',
 		onReady,
 		onPlay,
@@ -41,7 +43,8 @@
 			const wsOptions: WaveSurferOptions = {
 				...WAVEFORM_CONFIG,
 				container,
-				height: container.clientHeight
+				height: container.clientHeight,
+				duration
 			};
 
 			if (mode === 'playback' && url) {
@@ -62,7 +65,7 @@
 			wavesurfer.on('play', () => onPlay?.());
 			wavesurfer.on('pause', () => onPause?.());
 			wavesurfer.on('finish', () => onFinish?.());
-			wavesurfer.on('audioprocess', (time) => onTimeUpdate?.(time));
+			wavesurfer.on('timeupdate', (time) => onTimeUpdate?.(time));
 			wavesurfer.on('interaction', () => onInteraction?.(wavesurfer?.getCurrentTime() || 0));
 
 			// Handle Responsive Resizing
@@ -85,7 +88,7 @@
 	$effect(() => {
 		if (mode === 'playback' && url && wavesurfer && url !== loadedUrl) {
 			loadedUrl = url;
-			wavesurfer.load(url);
+			wavesurfer.load(url, undefined, duration);
 		}
 	});
 </script>
