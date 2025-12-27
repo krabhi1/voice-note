@@ -50,13 +50,19 @@ export class StorageService {
 		const result = await this.bucket.list({ prefix });
 		return result.objects;
 	}
-	async generatePresignedDownloadUrl(fileKey: string, expiresInSeconds = 60): Promise<string> {
+	async generatePresignedDownloadUrl(
+		fileKey: string,
+		expiresInSeconds = 60,
+		isDownload = false
+	): Promise<string> {
 		return await getSignedUrl(
 			this.s3Client,
 			new GetObjectCommand({
 				Bucket: env.CLOUDFLARE_R2_BUCKET_NAME,
 				Key: fileKey,
-				ResponseContentDisposition: `attachment; filename="${fileKey.split('/').pop()}"`
+				...(isDownload && {
+					ResponseContentDisposition: `attachment; filename="${fileKey.split('/').pop()}"`
+				})
 			}),
 			{ expiresIn: expiresInSeconds }
 		);

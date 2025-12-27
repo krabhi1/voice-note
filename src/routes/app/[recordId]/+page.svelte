@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PageProps } from './$types';
+	import type { PageData } from './$types';
 	import {
 		Play,
 		Pause,
@@ -8,254 +8,221 @@
 		SkipBack,
 		SkipForward,
 		Loader2,
-		Mic,
-		Clock,
 		Calendar,
 		FileAudio,
 		ChevronLeft
 	} from '@lucide/svelte';
-	import { formatDuration, formatSize } from '$lib/utils';
-	import AudioWaveform from '$lib/components/common/AudioWaveform.svelte';
-	import type WaveSurfer from 'wavesurfer.js';
+	import { formatDuration } from '$lib/utils';
 
-	let { data }: PageProps = $props();
+	let { data }: { data: PageData } = $props();
 
-	const url = `/app/audio/${data.recording.file_url}`;
-
-	let wavesurfer = $state<WaveSurfer | null>(null);
-
-	let isPlaying = $state(false);
-	let duration = $state(0);
+	// --- Media State (Declarative Bindings) ---
+	let paused = $state(true);
 	let currentTime = $state(0);
+	let duration = $state(data.recording.duration / 1000 || 0);
 	let volume = $state(1);
-	let isMuted = $state(false);
+	let muted = $state(false);
 	let playbackRate = $state(1);
-	let isReady = $state(false);
+	let readyState = $state(0);
+	let loadError = $state<string | null>(null);
 
-	function toggleMute() {
-		isMuted = !isMuted;
-		wavesurfer?.setMuted(isMuted);
-	}
+	// --- Derived State ---
+	const isPlaying = $derived(!paused);
+	const isReady = $derived(readyState >= 2);
+	const skipAmount = $derived(duration <= 60 ? 5 : 15);
+	const progressPercent = $derived((currentTime / duration) * 100 || 0);
 
+	// --- Actions ---
 	function togglePlaybackRate() {
 		const rates = [1, 1.25, 1.5, 2];
 		playbackRate = rates[(rates.indexOf(playbackRate) + 1) % rates.length];
-		wavesurfer?.setPlaybackRate(playbackRate);
 	}
 
-	function handleVolumeChange(e: Event) {
-		volume = parseFloat((e.target as HTMLInputElement).value);
-		wavesurfer?.setVolume(volume);
-		isMuted = volume === 0;
+	function handleError(e: Event) {
+		const error = (e.target as HTMLAudioElement).error;
+		loadError = error?.code === 4 ? 'Link expired. Please refresh.' : 'Playback error.';
 	}
 
-	const skipAmount = $derived.by(() => {
-		if (duration <= 30) return 2;
-		if (duration <= 120) return 5;
-		if (duration <= 600) return 10;
-		return 30;
-	});
-
-	const metadata = $derived([
-		{ icon: Clock, label: 'Duration', value: formatDuration(duration) },
-		{ icon: FileAudio, label: 'File Type', value: data.recording.content_type },
-		{ icon: Mic, label: 'Size', value: formatSize(data.recording.size) }
-	]);
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.target instanceof HTMLInputElement) return;
+		if (e.key === ' ') {
+			e.preventDefault();
+			paused = !paused;
+		}
+		if (e.key === 'ArrowLeft') currentTime -= skipAmount;
+		if (e.key === 'ArrowRight') currentTime += skipAmount;
+		if (e.key === 'm') muted = !muted;
+	}
 </script>
 
-<div class="flex flex-1 flex-col bg-background">
-	<div class="border-b border-muted/30 px-4 py-6 sm:px-10 sm:py-8">
-		<div class="mx-auto max-w-5xl">
-			<div class="mb-4 sm:mb-6">
-				<a
-					href="/app"
-					class="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider text-secondary uppercase transition-colors hover:text-primary sm:text-xs"
-				>
-					<ChevronLeft class="h-3.5 w-3.5" /> Back to Library
-				</a>
-			</div>
-			<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-				<div>
-					<h1 class="mb-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-						{data.recording.title || 'Untitled Recording'}
-					</h1>
-					<div class="flex flex-wrap gap-x-4 gap-y-2">
-						{#each metadata as item}
-							<div class="flex items-center gap-1.5 text-secondary">
-								<item.icon class="h-3 w-3" />
-								<span class="text-[10px] font-bold tracking-wider uppercase">{item.value}</span>
-							</div>
-						{/each}
-					</div>
-				</div>
-				<div
-					class="flex w-fit items-center gap-2 rounded-md border border-muted/30 bg-card px-3 py-1.5"
-				>
-					<Calendar class="h-3.5 w-3.5 text-secondary" />
-					<span class="text-[10px] font-bold text-secondary sm:text-xs">
-						{new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(
-							data.recording.createdAt
-						)}
-					</span>
-				</div>
-			</div>
+<svelte:window onkeydown={handleKeydown} />
+
+<audio
+	src={data.audioUrl}
+	bind:paused
+	bind:currentTime
+	bind:duration
+	bind:volume
+	bind:muted
+	bind:playbackRate
+	bind:readyState
+	onerror={handleError}
+	class="hidden"
+	preload="auto"
+	crossorigin="anonymous"
+></audio>
+
+<div class="flex h-full flex-col overflow-hidden bg-background text-foreground">
+	<!-- Navigation (Fixed Height) -->
+	<header class="flex flex-none items-center justify-between px-6 py-4 sm:px-10">
+		<a
+			href="/app"
+			class="flex items-center gap-2 text-xs font-bold tracking-widest text-secondary uppercase transition-colors hover:text-primary"
+		>
+			<ChevronLeft class="h-4 w-4" /> Library
+		</a>
+		<div class="flex items-center gap-2 text-secondary">
+			<Calendar class="h-3.5 w-3.5" />
+			<span class="text-[10px] font-bold tracking-tighter uppercase">
+				{new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(data.recording.createdAt)}
+			</span>
 		</div>
-	</div>
+	</header>
 
-	<div class="flex-1 overflow-auto px-4 py-8 sm:px-10 sm:py-12">
-		<div class="mx-auto max-w-5xl">
+	<!-- Main Player Area (Responsive Scaling) -->
+	<main class="flex flex-1 items-center justify-center p-4 sm:p-8">
+		<div class="flex w-full max-w-md flex-col items-center text-center">
+			<!-- Icon Container (Scales on small screens) -->
 			<div
-				class="relative rounded-lg border border-muted bg-card p-6 shadow-xl shadow-muted/20 sm:p-10"
+				class="mb-6 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-primary/5 text-primary shadow-2xl ring-1 shadow-primary/10 ring-primary/10 sm:mb-10 sm:h-32 sm:w-32 sm:rounded-[2.5rem]"
 			>
-				<div class="mb-8 flex items-center justify-between">
-					<div class="flex items-center gap-3 sm:gap-4">
-						<div
-							class="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground"
-						>
-							<FileAudio class="h-4 w-4" />
-						</div>
-						<span class="text-[10px] font-bold tracking-wider text-foreground uppercase sm:text-xs"
-							>Audio Stream</span
-						>
-					</div>
-				</div>
+				<FileAudio class="h-10 w-10 sm:h-12 sm:w-12" />
+			</div>
 
-				<div
-					class="relative h-40 w-full overflow-hidden border border-muted/30 bg-background sm:h-50"
-				>
-					<AudioWaveform
-						bind:wavesurfer
-						{url}
-						onReady={() => {
-							isReady = true;
-							duration = wavesurfer?.getDuration() || 0;
-						}}
-						onPlay={() => (isPlaying = true)}
-						onPause={() => (isPlaying = false)}
-						onFinish={() => (isPlaying = false)}
-						onTimeUpdate={(t) => (currentTime = t)}
-						onInteraction={(t) => (currentTime = t)}
-					/>
-					{#if !isReady}
-						<div
-							class="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm"
-						>
-							<Loader2 class="h-6 w-6 animate-spin text-secondary" />
-						</div>
-					{/if}
+			<!-- Title Section -->
+			<div class="mb-8 sm:mb-12">
+				<h1 class="mb-2 line-clamp-2 text-xl font-bold tracking-tight sm:text-3xl">
+					{data.recording.title || 'Untitled Note'}
+				</h1>
+				<p class="text-[10px] font-bold tracking-[0.2em] text-secondary uppercase">
+					{isReady ? 'Ready to stream' : 'Buffering...'}
+				</p>
+				{#if loadError}
 					<div
-						class="pointer-events-none absolute inset-0 -z-10 flex flex-col justify-between p-4 opacity-[0.03]"
+						class="mt-4 inline-block rounded-full bg-destructive/10 px-4 py-1 text-[10px] font-bold text-destructive uppercase"
 					>
-						{#each Array(4) as _}<div class="w-full border-t border-foreground"></div>{/each}
+						{loadError}
 					</div>
+				{/if}
+			</div>
+
+			<!-- Progress Section -->
+			<div class="mb-8 w-full sm:mb-12">
+				<div class="group relative flex items-center">
+					<input
+						type="range"
+						min="0"
+						max={duration}
+						step="0.1"
+						bind:value={currentTime}
+						class="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-primary transition-all"
+						style="background: linear-gradient(to right, var(--muted-foreground) {progressPercent}%, var(--muted) {progressPercent}%);"
+						aria-label="Seek"
+					/>
 				</div>
-
-				<!-- Current/Total Labels at bottom of waveform container -->
-				<div class="mt-3 flex items-center justify-between px-1">
-					<div class="text-left">
-						<span class="block text-[10px] font-bold text-secondary sm:text-xs">Current</span>
-						<span class="font-mono text-xs font-bold text-foreground"
-							>{formatDuration(currentTime)}</span
-						>
-					</div>
-					<div class="text-right">
-						<span class="block text-[10px] font-bold text-secondary sm:text-xs">Total</span>
-						<span class="font-mono text-xs font-bold text-foreground"
-							>{formatDuration(duration)}</span
-						>
-					</div>
+				<div class="mt-3 flex justify-between font-mono text-[10px] font-bold text-secondary">
+					<span>{formatDuration(currentTime)}</span>
+					<span>{formatDuration(duration)}</span>
 				</div>
+			</div>
 
-				<div class="mt-10 flex items-center justify-center gap-4 sm:gap-6">
-					<button
-						onclick={() => wavesurfer?.skip(-skipAmount)}
-						disabled={!isReady}
-						class="group relative flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary transition-colors hover:bg-secondary/20 disabled:opacity-30 sm:h-12 sm:w-12"
-						aria-label="Skip back {skipAmount} seconds"
-					>
-						<SkipBack class="h-4 w-4 sm:h-5 sm:w-5" />
-						<span
-							class="absolute -bottom-6 text-[10px] font-bold opacity-0 transition-opacity group-hover:opacity-100"
-							>{skipAmount}s</span
-						>
-					</button>
+			<!-- Main Controls -->
+			<div class="mb-10 flex items-center justify-center gap-6 sm:mb-16 sm:gap-10">
+				<button
+					onclick={() => (currentTime -= skipAmount)}
+					class="text-secondary transition-all hover:scale-110 hover:text-primary active:scale-95"
+					title="Back {skipAmount}s"
+				>
+					<SkipBack class="h-7 w-7 fill-current sm:h-8 sm:w-8" />
+				</button>
 
+				<button
+					onclick={() => (paused = !paused)}
+					disabled={!isReady}
+					class="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 sm:h-20 sm:w-20"
+				>
+					{#if !isReady && !loadError}
+						<Loader2 class="h-8 w-8 animate-spin" />
+					{:else if isPlaying}
+						<Pause class="h-8 w-8 fill-current sm:h-10 sm:w-10" />
+					{:else}
+						<Play class="ml-1 h-8 w-8 fill-current sm:h-10 sm:w-10" />
+					{/if}
+				</button>
+
+				<button
+					onclick={() => (currentTime += skipAmount)}
+					class="text-secondary transition-all hover:scale-110 hover:text-primary active:scale-95"
+					title="Forward {skipAmount}s"
+				>
+					<SkipForward class="h-7 w-7 fill-current sm:h-8 sm:w-8" />
+				</button>
+			</div>
+
+			<!-- Secondary Controls (Glassmorphism Bar) -->
+			<div
+				class="flex w-full items-center justify-between rounded-2xl border border-muted/20 bg-card/50 p-3 backdrop-blur-sm sm:p-4"
+			>
+				<div class="flex items-center gap-3">
 					<button
-						onclick={() => wavesurfer?.playPause()}
-						disabled={!isReady}
-						class="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 sm:h-20 sm:w-20"
+						onclick={() => (muted = !muted)}
+						class="text-secondary transition-colors hover:text-primary"
 					>
-						{#if !isReady}<Loader2
-								class="h-6 w-6 animate-spin sm:h-8 sm:w-8"
-							/>{:else if isPlaying}<Pause class="h-6 w-6 fill-current sm:h-8 sm:w-8" />{:else}<Play
-								class="ml-1 h-6 w-6 fill-current sm:h-8 sm:w-8"
+						{#if muted || volume === 0}<VolumeX class="h-4 w-4" />{:else}<Volume2
+								class="h-4 w-4"
 							/>{/if}
 					</button>
-
-					<button
-						onclick={() => wavesurfer?.skip(skipAmount)}
-						disabled={!isReady}
-						class="group relative flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary transition-colors hover:bg-secondary/20 disabled:opacity-30 sm:h-12 sm:w-12"
-						aria-label="Skip forward {skipAmount} seconds"
-					>
-						<SkipForward class="h-4 w-4 sm:h-5 sm:w-5" />
-						<span
-							class="absolute -bottom-6 text-[10px] font-bold opacity-0 transition-opacity group-hover:opacity-100"
-							>{skipAmount}s</span
-						>
-					</button>
+					<input
+						type="range"
+						min="0"
+						max="1"
+						step="0.01"
+						bind:value={volume}
+						class="h-1 w-16 cursor-pointer appearance-none bg-muted/30 accent-primary sm:w-24"
+						aria-label="Volume"
+					/>
 				</div>
 
-				<div
-					class="mt-10 flex flex-col items-center justify-center gap-6 sm:mt-12 sm:flex-row sm:gap-8"
+				<button
+					onclick={togglePlaybackRate}
+					class="rounded-lg bg-muted/10 px-3 py-1.5 text-[10px] font-bold text-secondary transition-colors hover:bg-primary/10 hover:text-primary"
 				>
-					<div class="flex w-full items-center justify-center gap-4 sm:w-auto">
-						<button
-							onclick={toggleMute}
-							class="text-secondary transition-colors hover:text-primary"
-						>
-							{#if isMuted || volume === 0}<VolumeX class="h-4 w-4" />{:else}<Volume2
-									class="h-4 w-4"
-								/>{/if}
-						</button>
-						<input
-							type="range"
-							min="0"
-							max="1"
-							step="0.01"
-							value={isMuted ? 0 : volume}
-							oninput={handleVolumeChange}
-							class="h-0.5 w-full cursor-pointer appearance-none bg-muted/30 accent-primary sm:w-24"
-						/>
-					</div>
-					<button
-						onclick={togglePlaybackRate}
-						class="flex h-8 w-14 items-center justify-center rounded-full bg-muted/5 text-[10px] font-bold text-secondary transition-all hover:bg-muted/10 hover:text-primary"
-					>
-						{playbackRate}x
-					</button>
-				</div>
+					{playbackRate}x
+				</button>
 			</div>
 		</div>
-	</div>
+	</main>
 </div>
 
 <style>
+	/* Custom Range Slider Styling */
 	input[type='range']::-webkit-slider-thumb {
 		appearance: none;
-		width: 10px;
-		height: 10px;
+		width: 14px;
+		height: 14px;
 		background: var(--primary);
 		cursor: pointer;
 		border-radius: 50%;
 		border: none;
+		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 	}
 	input[type='range']::-moz-range-thumb {
-		width: 10px;
-		height: 10px;
+		width: 14px;
+		height: 14px;
 		background: var(--primary);
 		cursor: pointer;
 		border-radius: 50%;
 		border: none;
+		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 	}
 </style>
