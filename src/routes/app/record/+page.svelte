@@ -7,6 +7,7 @@
 	import { Button } from '@/components/ui/button';
 	import { toast } from 'svelte-sonner';
 	import type { PageProps } from './$types';
+	import { sleep } from '@/utils';
 
 	let { data }: PageProps = $props();
 

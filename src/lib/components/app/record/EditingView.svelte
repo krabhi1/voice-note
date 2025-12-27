@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { X, Play, Pause, Save, Mic, Clock, FileText } from '@lucide/svelte';
 	import type { AudioData } from '$lib/types';
-	import { formatDuration, formatSize } from '$lib/utils';
+	import { formatDuration, formatSize, sleep } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -93,7 +93,7 @@
 
 <div class="relative flex flex-1 flex-col bg-background">
 	{#if !isReady}
-		<div class="absolute inset-0 z-50 bg-background">
+		<div class="absolute inset-0 z-50 flex items-center justify-center bg-background">
 			<ProcessingView elapsedSeconds={audioData.duration} />
 		</div>
 	{/if}
@@ -194,7 +194,10 @@
 								bind:wavesurfer
 								url={audioUrl}
 								duration={audioData.duration}
-								onReady={() => (isReady = true)}
+								onReady={async () => {
+									await sleep(1000); // ensure smooth transition
+									isReady = true;
+								}}
 								onTimeUpdate={(t) => (currentTime = t)}
 								onInteraction={(t) => (currentTime = t)}
 								onPlay={() => (isPlaying = true)}
